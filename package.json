@@ -1,0 +1,41 @@
+{
+    "name": "vendorflow",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "develop": "vite --host 127.0.0.1 --port 5174",
+        "format": "oxfmt --write .",
+        "format:check": "oxfmt --check .",
+        "lint": "oxlint --type-aware --deny-warnings scripts src vite.config.ts",
+        "test": "vitest run --config vite.config.ts",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@tanstack/react-router": "1.170.0",
+        "react": "19.2.8",
+        "react-dom": "19.2.8"
+    },
+    "devDependencies": {
+        "@testing-library/jest-dom": "6.9.1",
+        "@testing-library/react": "16.3.3",
+        "@types/node": "24.13.3",
+        "@types/react": "19.2.18",
+        "@types/react-dom": "19.2.7",
+        "@vitejs/plugin-react": "6.1.1",
+        "jsdom": "30.0.1",
+        "oxfmt": "0.66.0",
+        "oxlint": "1.81.0",
+        "oxlint-tsgolint": "7.0.2001",
+        "supabase": "2.114.0",
+        "typescript": "5.9.3",
+        "vite": "8.2.2",
+        "vitest": "4.1.4"
+    },
+    "engines": {
+        "node": ">=22.23.2 <25",
+        "pnpm": "10.33.2"
+    },
+    "packageManager": "pnpm@10.33.2"
+}

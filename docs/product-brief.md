@@ -129,7 +129,7 @@ The first release will not include:
 - Production-scale multi-tenancy or enterprise provisioning.
 - General workflow-building abstractions.
 
-## Open decisions and re-check triggers
+## Decisions and re-check triggers
 
 ### Public demo identity isolation
 
@@ -139,9 +139,9 @@ model. If isolation cannot be made simple and reliable, the deployment design mu
 
 ### Local Supabase operation with Podman
 
-Stage 2 must verify that the required Supabase development and database test workflow operates
-reliably with Podman. If it requires an unsupported Docker dependency, record the exact constraint
-and choose either a narrow documented exception or a simpler database workflow.
+Stage 2 verified the minimal local stack through Podman's compatibility API without Docker. The
+[runtime decision](./decisions/0002-local-supabase-runtime.md) records the temporary CLI pin,
+digest-locked images, supported host boundary, and upgrade trigger.
 
 ### Hosting topology
 

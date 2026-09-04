@@ -44,8 +44,9 @@ If a rule should apply across multiple repositories, promote it into the guide p
 - Purpose: Vendor intake and approval portfolio product demonstrating internal workflows,
   PostgreSQL modeling, and resource-scoped permissions.
 - Primary languages: TypeScript and SQL; OpenTofu configuration will be added for infrastructure.
-- Key directories: `docs/` contains product, contract, and decision records. Application,
-  database, test, and infrastructure directories will be recorded when Stage 2 establishes them.
+- Key directories: `src/` contains the React application and colocated tests; `scripts/` contains
+  typed local tooling; `supabase/` contains local service configuration and will contain migrations;
+  `docs/` contains product, contract, and decision records.
 - Architectural constraints: PostgreSQL is the final authorization boundary. Sensitive workflow
   transitions must atomically enforce authorization, revision checks, state mutation, and audit
   insertion. Keep the six-state workflow explicit; do not introduce a generic workflow engine.
@@ -53,21 +54,20 @@ If a rule should apply across multiple repositories, promote it into the guide p
 
 ## Build / Test / Validation
 
-- Install: Not available until Stage 2 establishes locked dependencies and `just install`.
-- Build: Not available until Stage 2 establishes `just build`.
-- Test: Not available until Stage 2 establishes `just test`.
-- Lint: Validate Markdown manually until Stage 2 establishes `just lint`.
-- Typecheck: Not available until Stage 2 establishes `just typecheck`.
-- Validation: Review product and contract changes against `docs/product-brief.md` and
-  `docs/workflow-contract.md`.
-- Run one test: To be documented with the Stage 2 test harness.
+- Install: `just install`.
+- Build: `just build`.
+- Test: `just test`.
+- Lint: `just lint`.
+- Typecheck: `just typecheck`.
+- Validation: `just check`; also review contract changes against `docs/workflow-contract.md`.
+- Run one test: `just test-one path/to/test_file.ts`.
 
 ## Local Workflow Notes
 
-- Preferred commands: Use root `just` recipes once Stage 2 creates the `justfile`; use Podman rather
-  than Docker for local containers.
-- Safe-to-edit areas: Product documentation during Stage 1. Later stages will define code ownership
-  boundaries as they create directories.
+- Preferred commands: Use root `just` recipes; use Podman rather than Docker for local containers.
+  Run `just database-start` and `just database-stop` for the minimal local Supabase stack.
+- Safe-to-edit areas: `src/`, `scripts/`, `supabase/`, and `docs/`, subject to their recorded
+  contracts and ownership boundaries.
 - Areas requiring extra care: RLS policies, authenticated database functions, audit events, schema
   migrations, generated database types, demo identity isolation, and infrastructure state.
 - Review expectations: Check valid, invalid, boundary, stale-revision, permission-denied, and

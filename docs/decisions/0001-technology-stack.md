@@ -89,6 +89,11 @@ Stage 2 must demonstrate:
 2. Locked frontend dependencies and strict formatting, linting, and type-checking commands.
 3. No service-role credential in browser artifacts or repository files.
 
+Stage 2 satisfied these gates on 2026-09-04. The tested Podman workflow and temporary Supabase CLI
+pin are recorded in [decision 0002](./0002-local-supabase-runtime.md). The application currently
+installs TanStack Router because routing has a current consumer. TanStack Query, TanStack Form, and
+the Supabase browser client remain deferred until a working feature consumes each dependency.
+
 Stage 6 must demonstrate:
 
 1. Reviewable OpenTofu support for selected project-owned resources.

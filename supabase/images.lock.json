@@ -1,0 +1,22 @@
+{
+    "version": 1,
+    "platform": "linux/amd64",
+    "images": [
+        {
+            "tag": "ghcr.io/supabase/postgres:17.6.1.158",
+            "digest": "sha256:de6331c27bac59149b6b58955d9de1ca6b3c484b11475edca23437712bed0786"
+        },
+        {
+            "tag": "ghcr.io/supabase/kong:2.8.1",
+            "digest": "sha256:e21b0b793879ab96720ed4188f9441260273f4bf775bcbff8d435e019ffb759a"
+        },
+        {
+            "tag": "ghcr.io/supabase/gotrue:v2.195.0",
+            "digest": "sha256:0dda7536205217ca6f207e7bd6ba36e281b0da46074cef5d55ae1de6ee0733f2"
+        },
+        {
+            "tag": "ghcr.io/supabase/postgrest:v16.1",
+            "digest": "sha256:73e76c305027cb1119bc7c6ab82449d9e1a50a9e8697f4ebac5443dc63590c90"
+        }
+    ]
+}

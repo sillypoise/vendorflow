@@ -25,11 +25,14 @@ The test suite will cover valid and invalid transitions, cross-user access, and 
 
 ## Current status
 
-Stage 1, product definition. No application has been scaffolded or deployed yet.
+Stage 2, application foundation. The repository contains a tested React/TanStack shell and a
+minimal local Supabase runtime. The vendor request schema and working workflow begin in Stage 3.
+Nothing has been deployed yet.
 
 - [Product brief](./docs/product-brief.md)
 - [Workflow contract](./docs/workflow-contract.md)
 - [Technology decision](./docs/decisions/0001-technology-stack.md)
+- [Local Supabase runtime decision](./docs/decisions/0002-local-supabase-runtime.md)
 
 ## Planned stack
 
@@ -40,6 +43,44 @@ Stage 1, product definition. No application has been scaffolded or deployed yet.
 - Vitest, React Testing Library, Playwright, and database authorization tests.
 - Cloudflare Pages for the frontend, subject to an infrastructure validation spike.
 - OpenTofu for supported project-owned infrastructure and Podman for local containers.
+
+## Local development
+
+### Requirements
+
+- Linux on amd64 for the current local Supabase image lock.
+- Node.js 22.23.2 through 24.x.
+- pnpm 10.33.2.
+- just 1.43 or newer.
+- Rootless Podman 5.7 or newer.
+
+Use the repository commands rather than duplicating their internal steps:
+
+```bash
+just install
+just database-start
+just develop
+```
+
+The application runs at <http://127.0.0.1:5174>. Stop the local Supabase services when finished:
+
+```bash
+just database-stop
+```
+
+`just database-start` prepares digest-locked images, starts a temporary Podman API socket, and runs
+only PostgreSQL, Kong, GoTrue, and PostgREST. It deliberately suppresses generated local keys. See
+the [runtime decision](./docs/decisions/0002-local-supabase-runtime.md) for compatibility and
+integrity details.
+
+## Validation
+
+```bash
+just check
+```
+
+The check runs formatting verification, type-aware linting with warnings denied, TypeScript,
+component tests, and a production build. Use `just --list` to discover individual commands.
 
 ## Planned delivery stages
 
