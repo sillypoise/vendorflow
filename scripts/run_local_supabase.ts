@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 const maximum_service_attempts = 50;
 const service_attempt_interval_ms = 100;
@@ -39,20 +40,24 @@ function sanitize_failure_output(output: string): string {
         .replaceAll(/sb_[A-Za-z0-9_-]+/gu, "[REDACTED_SUPABASE_KEY]")
         .replaceAll(/(key|password|secret)(\s*[:=]\s*)\S+/giu, "$1$2[REDACTED]")
         .split("\n")
-        .slice(-20)
+        .slice(-120)
         .join("\n")
-        .slice(-2_000);
+        .slice(-20_000);
 }
 
 const action = process.argv[2];
 
 if (process.argv.length !== 3) {
-    throw new Error("Expected exactly one action: start or stop.");
+    throw new Error("Expected one action: start, stop, reset, test, lint, or types.");
 }
 
 switch (action) {
     case "start":
     case "stop":
+    case "reset":
+    case "test":
+    case "lint":
+    case "types":
         break;
     case undefined:
         throw new Error("Expected one local Supabase action.");
@@ -104,10 +109,49 @@ try {
         throw new Error("Podman API service did not become ready within 5 seconds.");
     }
 
-    const supabase_arguments =
-        action === "start"
-            ? ["exec", "supabase", "start", "--exclude", supabase_exclusions]
-            : ["exec", "supabase", "stop", "--no-backup"];
+    let expose_success_output = false;
+    let supabase_arguments: string[];
+
+    switch (action) {
+        case "start":
+            supabase_arguments = ["exec", "supabase", "start", "--exclude", supabase_exclusions];
+            break;
+        case "stop":
+            supabase_arguments = ["exec", "supabase", "stop", "--no-backup"];
+            break;
+        case "reset":
+            supabase_arguments = ["exec", "supabase", "db", "reset", "--local"];
+            break;
+        case "test":
+            supabase_arguments = ["exec", "supabase", "test", "db", "--local", "supabase/tests"];
+            expose_success_output = true;
+            break;
+        case "lint":
+            supabase_arguments = [
+                "exec",
+                "supabase",
+                "db",
+                "lint",
+                "--local",
+                "--level=warning",
+                "--fail-on=warning",
+                "--schema=public",
+            ];
+            expose_success_output = true;
+            break;
+        case "types":
+            supabase_arguments = [
+                "exec",
+                "supabase",
+                "gen",
+                "types",
+                "typescript",
+                "--local",
+                "--schema=public",
+            ];
+            break;
+    }
+
     const supabase_result = spawnSync("pnpm", supabase_arguments, {
         encoding: "utf8",
         env: { ...process.env, DOCKER_HOST: `unix://${socket_path}` },
@@ -123,6 +167,22 @@ try {
             `${supabase_result.stdout}\n${supabase_result.stderr}`,
         );
         throw new Error(`Supabase ${action} failed.\n${safe_output}`);
+    }
+
+    if (action === "types") {
+        const types_directory = fileURLToPath(new URL("../src/lib", import.meta.url));
+        const types_path = fileURLToPath(new URL("../src/lib/database.types.ts", import.meta.url));
+
+        assert.ok(supabase_result.stdout.length > 0);
+        assert.ok(supabase_result.stdout.length <= 5_000_000);
+        assert.ok(supabase_result.stdout.includes("export type Database"));
+        mkdirSync(types_directory, { mode: 0o755, recursive: true });
+        writeFileSync(types_path, supabase_result.stdout, { encoding: "utf8", mode: 0o644 });
+    }
+
+    if (expose_success_output) {
+        process.stdout.write(supabase_result.stdout);
+        process.stderr.write(supabase_result.stderr);
     }
 
     process.stdout.write(`Local Supabase ${action} completed.\n`);

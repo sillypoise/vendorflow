@@ -48,6 +48,30 @@ database-images:
 database-start: database-images
     node scripts/run_local_supabase.ts start
 
+# Reset the running local database through migrations and fictional seed data.
+database-reset:
+    node scripts/run_local_supabase.ts reset
+
+# Run every non-mutating database validation against the running local database.
+database-check: database-lint database-test database-types-check
+
+# Check public database functions for typing and lint warnings.
+database-lint:
+    node scripts/run_local_supabase.ts lint
+
+# Run transactional pgTAP checks against the running local database.
+database-test:
+    node scripts/run_local_supabase.ts test
+
+# Regenerate TypeScript definitions from the running local database.
+database-types:
+    node scripts/run_local_supabase.ts types
+    pnpm exec oxfmt --write src/lib/database.types.ts
+
+# Verify that committed TypeScript database definitions match the running schema.
+database-types-check: database-types
+    git diff --exit-code -- src/lib/database.types.ts
+
 # Stop local Supabase without retaining a database backup.
 database-stop:
     node scripts/run_local_supabase.ts stop
@@ -57,8 +81,8 @@ database-status:
     podman ps --all --filter label=com.supabase.cli.project=p2-vendorflow \
         --format "table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.Status{{"}}"}}"
 
-# Run the required non-deployment checks.
-check: format-check lint typecheck test build
+# Run the required non-deployment checks against a running local database.
+check: format-check lint typecheck test database-check build
 
 # Print the active project tool versions.
 runtime:

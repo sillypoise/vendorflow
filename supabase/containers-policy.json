@@ -6,12 +6,22 @@
     ],
     "transports": {
         "docker": {
+            "ghcr.io/supabase/pg_prove": [
+                {
+                    "type": "insecureAcceptAnything"
+                }
+            ],
             "ghcr.io/supabase/gotrue": [
                 {
                     "type": "insecureAcceptAnything"
                 }
             ],
             "ghcr.io/supabase/kong": [
+                {
+                    "type": "insecureAcceptAnything"
+                }
+            ],
+            "ghcr.io/supabase/postgres-meta": [
                 {
                     "type": "insecureAcceptAnything"
                 }

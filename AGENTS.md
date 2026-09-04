@@ -45,8 +45,10 @@ If a rule should apply across multiple repositories, promote it into the guide p
   PostgreSQL modeling, and resource-scoped permissions.
 - Primary languages: TypeScript and SQL; OpenTofu configuration will be added for infrastructure.
 - Key directories: `src/` contains the React application and colocated tests; `scripts/` contains
-  typed local tooling; `supabase/` contains local service configuration and will contain migrations;
-  `docs/` contains product, contract, and decision records.
+  typed local tooling; `supabase/migrations/` owns schema changes; `supabase/tests/` contains pgTAP
+  authorization and workflow checks; `supabase/seed.sql` contains fictional local data;
+  `src/lib/database.types.ts` is generated from the database; `docs/` contains product, contract,
+  and decision records.
 - Architectural constraints: PostgreSQL is the final authorization boundary. Sensitive workflow
   transitions must atomically enforce authorization, revision checks, state mutation, and audit
   insertion. Keep the six-state workflow explicit; do not introduce a generic workflow engine.
@@ -56,16 +58,18 @@ If a rule should apply across multiple repositories, promote it into the guide p
 
 - Install: `just install`.
 - Build: `just build`.
-- Test: `just test`.
-- Lint: `just lint`.
+- Test: `just test`; with local Supabase running, `just database-test`.
+- Lint: `just lint`; with local Supabase running, `just database-lint`.
 - Typecheck: `just typecheck`.
-- Validation: `just check`; also review contract changes against `docs/workflow-contract.md`.
+- Validation: Run `just database-start`, then `just check`; also review contract changes against
+  `docs/workflow-contract.md`.
 - Run one test: `just test-one path/to/test_file.ts`.
 
 ## Local Workflow Notes
 
 - Preferred commands: Use root `just` recipes; use Podman rather than Docker for local containers.
-  Run `just database-start` and `just database-stop` for the minimal local Supabase stack.
+  Run `just database-start` and `just database-stop` for the minimal local Supabase stack. Use
+  `just database-reset` only when deleting local changes is intentional.
 - Safe-to-edit areas: `src/`, `scripts/`, `supabase/`, and `docs/`, subject to their recorded
   contracts and ownership boundaries.
 - Areas requiring extra care: RLS policies, authenticated database functions, audit events, schema

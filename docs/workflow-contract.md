@@ -17,7 +17,8 @@ operation. Request identifiers, organization identifiers, owner identifiers, rol
 identifiers supplied by a client are never accepted as authority.
 
 All reads and writes are scoped to the authenticated user's active organization. A failed or absent
-policy decision denies the operation.
+policy decision denies the operation. Version 1 permits one organization membership per user; an
+inactive membership grants no access.
 
 ## Required request fields
 
@@ -39,6 +40,19 @@ state or audit event is changed.
 
 The authenticated database context supplies request ownership and organization scope. The client
 cannot choose these fields during creation.
+
+## Draft operations
+
+`create_vendor_request` accepts a `vendor_request_draft_input` containing all eight request fields.
+Each field may be explicitly null while the request is a draft. It returns the created request with
+database-derived identity, organization, state, revision, and timestamps. Creation starts at
+revision 1 and records one `created` audit event.
+
+`update_vendor_request` accepts a request identifier, expected revision, and a
+`vendor_request_draft_input` that completely replaces all eight request fields. Only the request
+owner may call it in `draft` or `changes_requested`. It returns the updated request and increments
+the revision exactly once. Draft field edits do not create audit events because the audit timeline
+records lifecycle actions rather than field history.
 
 ## States
 
@@ -84,13 +98,16 @@ Any state/action pair absent from this list is invalid and must not mutate state
 
 ## Transition input
 
-A transition operation accepts only:
+The transition operations are:
 
-- The request identifier.
-- The expected request revision.
-- The action-specific payload, such as reviewer identifier or decision reason.
+- `submit_vendor_request`, accepting request identifier and expected revision.
+- `assign_vendor_request`, additionally accepting the reviewer identifier.
+- `review_vendor_request`, additionally accepting `approve`, `reject`, or `request_changes` and an
+  optional decision reason.
 
-Actor identity, organization, and role are obtained from authenticated database context.
+A rejection or change request requires a trimmed reason from 1 through 1,000 characters. An approval
+may include a reason under the same bounds. Actor identity, organization, and role are obtained from
+authenticated database context.
 
 ## Transition output
 
@@ -107,7 +124,7 @@ The request update and audit event are committed atomically. Neither may exist w
 
 ## Audit contract
 
-Each successful state transition records an append-only event containing:
+Creation and each successful state transition record an append-only event containing:
 
 - Event identifier.
 - Request identifier and organization identifier.
@@ -135,8 +152,9 @@ Boundary failures use these stable application error codes:
 | `DEPENDENCY_UNAVAILABLE` | A required service is temporarily unavailable. | No partial mutation |
 | `INTERNAL_ERROR` | An unexpected bounded failure occurred. | No partial mutation |
 
-Public errors expose the stable code and a safe user-facing message. They do not expose SQL,
-policies, stack traces, credentials, or internal identifiers beyond the caller-visible resource.
+Database functions raise SQLSTATE `P0001` with the stable error code as the message. Public errors
+expose that code and a safe user-facing message. They do not expose SQL, policies, stack traces,
+credentials, or internal identifiers beyond the caller-visible resource.
 
 To avoid disclosing cross-organization resource existence, an unauthorized read by identifier is
 reported as `REQUEST_NOT_FOUND`. An authenticated mutation against an already visible request may
@@ -165,6 +183,12 @@ in the same change. After version 1 is public:
 - Mixed schema/application versions must be tested before a database migration is deployed.
 
 The contract currently has no deprecated fields or supported legacy versions.
+
+### 2026-09-04 pre-release delta
+
+Stage 3 made the draft operations and database RPC names explicit, bounded decision reasons at 1,000
+characters, established one organization membership per user, and documented creation audit events.
+Compatibility classification: pre-release clarification and narrowing with no external consumers.
 
 ## Required negative and boundary checks
 

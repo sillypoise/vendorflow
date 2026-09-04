@@ -2,7 +2,7 @@
 
 ## Status
 
-- Stage: Approved for initial implementation.
+- Stage: Database workflow implemented; application workflow screens are next.
 - Product owner: `@sillypoise`.
 - Document owner: `@sillypoise`.
 - Last reviewed: 2026-09-04.

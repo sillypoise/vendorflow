@@ -5,8 +5,10 @@ import { fileURLToPath } from "node:url";
 import image_lock from "../supabase/images.lock.json" with { type: "json" };
 
 const allowed_repositories = [
+    "ghcr.io/supabase/pg_prove",
     "ghcr.io/supabase/gotrue",
     "ghcr.io/supabase/kong",
+    "ghcr.io/supabase/postgres-meta",
     "ghcr.io/supabase/postgres",
     "ghcr.io/supabase/postgrest",
 ] as const;
@@ -107,4 +109,23 @@ for (const image of image_lock.images) {
 
     assert.equal(inspect_result.stdout.trim(), image.digest);
     process.stdout.write(`Prepared ${image.tag}.\n`);
+}
+
+// The type generator requests the same locked metadata image through its public ECR alias.
+const metadata_alias_result = spawnSync(
+    "podman",
+    [
+        "tag",
+        "ghcr.io/supabase/postgres-meta:v0.97.0",
+        "public.ecr.aws/supabase/postgres-meta:v0.97.0",
+    ],
+    { encoding: "utf8", timeout: 30_000 },
+);
+
+if (metadata_alias_result.error !== undefined) {
+    throw metadata_alias_result.error;
+}
+
+if (metadata_alias_result.status !== 0) {
+    throw new Error("Failed to tag the locked PostgreSQL metadata image alias.");
 }

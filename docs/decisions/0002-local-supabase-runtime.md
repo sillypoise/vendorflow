@@ -55,7 +55,7 @@ checks through the supported Podman API.
 `scripts/prepare_supabase_images.ts` pulls those immutable references and verifies each resulting
 image digest before applying the tag expected by the CLI.
 
-`supabase/containers-policy.json` rejects all sources except the four named GHCR repositories. Its
+`supabase/containers-policy.json` rejects all sources except the six named GHCR repositories. Its
 `insecureAcceptAnything` rule disables signature requirements only for those repositories; content
 identity remains fixed by the immutable digest in the reviewed lock file. A lock update must review
 both the Supabase CLI service version and the resulting image digest.
@@ -67,6 +67,9 @@ configuration.
 
 - `just database-images` prepares and verifies locked images.
 - `just database-start` starts a temporary Podman API service and the minimal Supabase stack.
+- `just database-reset` rebuilds the database from migrations and fictional seed data.
+- `just database-check` runs database lint, transactional pgTAP tests, and generated-type drift
+  checks.
 - `just database-stop` starts a temporary API service and removes the local stack without backup.
 - `just database-status` reads container state directly through Podman.
 

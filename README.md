@@ -25,14 +25,15 @@ The test suite will cover valid and invalid transitions, cross-user access, and 
 
 ## Current status
 
-Stage 2, application foundation. The repository contains a tested React/TanStack shell and a
-minimal local Supabase runtime. The vendor request schema and working workflow begin in Stage 3.
-Nothing has been deployed yet.
+Stage 3, database workflow. The repository contains a tested React/TanStack shell plus the vendor
+request schema, Row Level Security policies, atomic workflow functions, audit history, and fictional
+seed data. Application workflow screens begin in Stage 4. Nothing has been deployed yet.
 
 - [Product brief](./docs/product-brief.md)
 - [Workflow contract](./docs/workflow-contract.md)
 - [Technology decision](./docs/decisions/0001-technology-stack.md)
 - [Local Supabase runtime decision](./docs/decisions/0002-local-supabase-runtime.md)
+- [Database workflow decision](./docs/decisions/0003-database-workflow.md)
 
 ## Planned stack
 
@@ -69,9 +70,11 @@ just database-stop
 ```
 
 `just database-start` prepares digest-locked images, starts a temporary Podman API socket, and runs
-only PostgreSQL, Kong, GoTrue, and PostgREST. It deliberately suppresses generated local keys. See
-the [runtime decision](./docs/decisions/0002-local-supabase-runtime.md) for compatibility and
-integrity details.
+only PostgreSQL, Kong, GoTrue, and PostgREST. It deliberately suppresses generated local keys. Use
+`just database-reset` to rebuild from migrations and fictional seed data; reset intentionally
+deletes local database changes. See the
+[runtime decision](./docs/decisions/0002-local-supabase-runtime.md) for compatibility and integrity
+details.
 
 ## Validation
 
@@ -79,8 +82,10 @@ integrity details.
 just check
 ```
 
-The check runs formatting verification, type-aware linting with warnings denied, TypeScript,
-component tests, and a production build. Use `just --list` to discover individual commands.
+Run `just database-start` first. The check runs formatting verification, type-aware linting with
+warnings denied, TypeScript, component tests, database lint, generated-type drift checks, 86
+transactional pgTAP checks, and a production build. Use `just --list` to discover individual
+commands.
 
 ## Planned delivery stages
 

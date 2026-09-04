@@ -10,6 +10,14 @@
     "rules": {
         "react/react-in-jsx-scope": "off"
     },
+    "overrides": [
+        {
+            "files": ["src/lib/database.types.ts"],
+            "rules": {
+                "max-lines": "off"
+            }
+        }
+    ],
     "env": {
         "browser": true,
         "builtin": true,
