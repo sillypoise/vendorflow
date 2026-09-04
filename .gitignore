@@ -1,0 +1,31 @@
+# Dependencies and build output.
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+
+# Local environment and credentials.
+.env
+.env.*
+!.env.example
+
+# Local Supabase state.
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# OpenTofu local and sensitive artifacts.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+!.terraform.lock.hcl
+!*.example.tfvars
+
+# Editors and operating systems.
+.DS_Store
+.idea/
+.vscode/
