@@ -201,7 +201,8 @@ anonymous identities and never to a supplied user or organization identifier.
   membership or a workspace for at least 24 hours. It returns the number of identities deleted
   (0–101), preserves live sessions and ordinary accounts, and can be repeated safely.
 - Ending the browser session signs out locally; server data remains until expiry and service-only
-  cleanup. Cleanup scheduling is an operational release requirement, not yet deployed.
+  cleanup. The database-owned `vendorflow-demo-maintenance` job runs once per minute with a
+  20-second statement timeout. It records a private success heartbeat only after cleanup completes.
 
 Invalid control inputs use `VALIDATION_FAILED`; absent/inactive capability uses `PERMISSION_DENIED`;
 expired sessions use `DEMO_EXPIRED`; caps use `DEMO_LIMIT_REACHED`. Unauthenticated callers have no
@@ -217,6 +218,22 @@ Transport errors do not prove whether an atomic write committed. Browser calls t
 seconds, never automatically retry mutations, and instruct users to check current state before
 retrying. Creation is not idempotent across an ambiguous transport failure.
 
+## Operational health boundary
+
+Owner: `@sillypoise`; version: `v1-draft`. `demo_health()` accepts no arguments and returns one boolean
+for anonymous, authenticated, and service-role callers. It exposes no identities, counts, request
+contents, credentials, or internal failure details. Health is false when the cleanup heartbeat is
+absent or at least five minutes old, its job is inactive, an expired workspace is more than 15
+minutes overdue, or an abandoned anonymous identity is older than 25 hours. It is also false at
+100 anonymous identities created in the last hour, 1,000 demo-control events in the last hour, or
+250 MiB database size. These are alert thresholds, not a guarantee of capacity or an admission limit.
+Transport/SQL failures must also be treated as unhealthy by the monitoring caller.
+
+Only the database owner executes `private.run_demo_maintenance()` through pg_cron. Public callers
+cannot invoke it or access its status table. It prunes at most 100 of its own execution records older
+than one day per invocation, and does not alter other scheduled jobs. Operators must investigate
+missing heartbeats and failed probes; a successful frontend deployment does not satisfy this gate.
+
 ## Compatibility and evolution
 
 Before the first public release, contract changes update this document and the corresponding tests
@@ -229,6 +246,15 @@ in the same change. After version 1 is public:
 - Mixed schema/application versions must be tested before a database migration is deployed.
 
 The contract currently has no deprecated fields or supported legacy versions.
+
+### 2026-09-06 Stage 6 pre-release delta
+
+Classification: additive health RPC, private maintenance heartbeat, and database-owned cleanup job.
+Workflow states, fields, revision semantics, and mutation errors are unchanged. Hosted entry now
+requires a production Turnstile token; only the exact loopback local stack may omit CAPTCHA. Missing,
+expired, malformed, or failed verification leaves entry disabled. A token is consumed on each signup
+attempt and never persisted by the application. The hosted authentication cutover remains closed
+until deployment checks pass. Apply the migration before starting the external health probe.
 
 ### 2026-09-05 Stage 5 pre-release delta
 

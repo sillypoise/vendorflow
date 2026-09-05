@@ -239,6 +239,7 @@ export type Database = {
                 };
             };
             demo_control: { Args: { p_action: string }; Returns: undefined };
+            demo_health: { Args: never; Returns: boolean };
             review_vendor_request: {
                 Args: {
                     p_decision: string;
