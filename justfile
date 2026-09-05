@@ -81,8 +81,16 @@ database-status:
     podman ps --all --filter label=com.supabase.cli.project=p2-vendorflow \
         --format "table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.Status{{"}}"}}"
 
+# Install the pinned Chromium browser used by the end-to-end suite.
+browser-install:
+    pnpm exec playwright install chromium
+
+# Test the production application in real, isolated browser sessions.
+browser-test: build
+    pnpm exec playwright test
+
 # Run the required non-deployment checks against a running local database.
-check: format-check lint typecheck test database-check build
+check: format-check lint typecheck test database-check browser-test
 
 # Print the active project tool versions.
 runtime:

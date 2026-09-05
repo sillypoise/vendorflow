@@ -8,7 +8,7 @@
         "develop": "vite --host 127.0.0.1 --port 5174",
         "format": "oxfmt --write .",
         "format:check": "oxfmt --check .",
-        "lint": "oxlint --type-aware --deny-warnings scripts src vite.config.ts",
+        "lint": "oxlint --type-aware --deny-warnings scripts src e2e vite.config.ts playwright.config.ts",
         "test": "vitest run --config vite.config.ts",
         "typecheck": "tsc --noEmit"
     },
@@ -21,6 +21,8 @@
         "react-dom": "19.2.8"
     },
     "devDependencies": {
+        "@axe-core/playwright": "4.13.0",
+        "@playwright/test": "1.63.0",
         "@testing-library/jest-dom": "6.9.1",
         "@testing-library/react": "16.3.3",
         "@types/node": "24.13.3",

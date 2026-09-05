@@ -2,7 +2,7 @@
 
 ## Status
 
-- Stage: Application workflow implemented; experience hardening is next.
+- Stage: Experience hardening implemented; hosted operations and deployment are next.
 - Product owner: `@sillypoise`.
 - Document owner: `@sillypoise`.
 - Last reviewed: 2026-09-05.
@@ -85,7 +85,8 @@ Every applicable screen must explicitly handle:
 - Recovery through retry, correction, or safe navigation.
 
 The first release supports a 320 CSS-pixel mobile viewport through a 1,440 CSS-pixel desktop
-viewport. Stage 5 must test both boundaries and representative intermediate widths.
+viewport. Stage 5 exercises Chromium at 320, 768, and 1,440 pixels, including axe checks and keyboard
+navigation. See [validation evidence](./stage-5-validation.md) for tested states and limitations.
 
 ## Initial request data
 
@@ -133,9 +134,12 @@ The first release will not include:
 
 ### Public demo identity isolation
 
-A shared mutable demo account is not acceptable because visitors could affect one another. Before
-public deployment, Stage 5 must select and test a visitor-isolated Supabase identity and seed/reset
-model. If isolation cannot be made simple and reliable, the deployment design must be reconsidered.
+A shared mutable demo account is not acceptable because visitors could affect one another. Stage 5
+implemented anonymous Supabase identities with one private organization per visitor, server-enforced
+expiry, and caller-scoped role/reset controls. This simulates three personas, not independent human
+approvers. The [decision](./decisions/0005-isolated-demo.md) records the authorization boundary.
+Stage 6 must verify hosted CAPTCHA/rate controls, cleanup scheduling, capacity monitoring, and
+credential handling before public access; local isolation tests do not establish hosted readiness.
 
 ### Local Supabase operation with Podman
 

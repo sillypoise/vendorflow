@@ -10,7 +10,7 @@ export function MutationError({ error }: { error: unknown }) {
                 }}
                 type="button"
             >
-                Refresh request
+                Refresh page
             </button>
         </div>
     );

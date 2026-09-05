@@ -176,7 +176,7 @@ try {
                 "--local",
                 "--level=warning",
                 "--fail-on=warning",
-                "--schema=public",
+                "--schema=public,private",
             ];
             expose_success_output = true;
             break;

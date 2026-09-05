@@ -20,14 +20,15 @@ requester creates a vendor request
 → the requester sees the result and can recover from requested changes
 ```
 
-Authorization will be enforced in PostgreSQL rather than only through hidden interface controls.
-The test suite will cover valid and invalid transitions, cross-user access, and role denial.
+Authorization is enforced in PostgreSQL rather than only through hidden interface controls.
+The test suite covers valid and invalid transitions, cross-user access, and role denial.
 
 ## Current status
 
-Stage 4, application workflow. The repository contains the complete requester, administrator, and
-reviewer flow backed by PostgreSQL authorization, revision checks, and immutable audit history.
-Failure recovery and end-to-end hardening begin in Stage 5. Nothing has been deployed yet.
+Stage 5, experience hardening. The complete workflow now includes private visitor workspaces,
+server-enforced demo expiry and limits, safe role switching/reset, stale-edit recovery, and real
+browser accessibility and workflow checks at three viewport widths. Nothing has been deployed yet.
+Hosted abuse protection, cleanup scheduling, infrastructure, and deployment remain Stage 6 gates.
 
 - [Product brief](./docs/product-brief.md)
 - [Workflow contract](./docs/workflow-contract.md)
@@ -35,6 +36,8 @@ Failure recovery and end-to-end hardening begin in Stage 5. Nothing has been dep
 - [Local Supabase runtime decision](./docs/decisions/0002-local-supabase-runtime.md)
 - [Database workflow decision](./docs/decisions/0003-database-workflow.md)
 - [Application workflow decision](./docs/decisions/0004-application-workflow.md)
+- [Isolated demo decision](./docs/decisions/0005-isolated-demo.md)
+- [Stage 5 validation evidence and limitations](./docs/stage-5-validation.md)
 
 ## Planned stack
 
@@ -65,16 +68,15 @@ just database-reset
 just develop
 ```
 
-Use one of the fictional local identities below with the local-only password `VendorFlow2026`:
+Open the workflow and choose **Start private demo**. Supabase creates an anonymous identity and
+PostgreSQL provisions a private organization with one fictional draft. Use **Demo role** to try
+requester, administrator, and reviewer actions in that workspace. **Reset my demo** deletes only
+that workspace's requests and history after confirmation; **End session** clears browser access.
+Workspaces expire after 24 hours. Ending a session does not immediately delete its server data.
 
-- `maya.requester@vendorflow.example` — requester.
-- `elliot.requester@vendorflow.example` — second requester for ownership checks.
-- `priya.admin@vendorflow.example` — administrator.
-- `jon.reviewer@vendorflow.example` — reviewer.
-
-The credential is an intentionally public local fixture, not a deployable secret. Global signup is
-disabled, and Stage 5 must replace this shared local access model with isolated visitor identities
-before any public deployment.
+Shared password login has been removed. Named seed identities remain database-test fixtures, not
+login accounts. A visitor plays three personas using one private identity; this demonstrates role
+checks, not independent-human separation of duties. Use separate browser contexts to test isolation.
 
 The application runs at <http://127.0.0.1:5174>. Stop the local Supabase services when finished:
 
@@ -96,10 +98,12 @@ details.
 just check
 ```
 
-Run `just database-start` first. The check runs formatting verification, type-aware linting with
-warnings denied, TypeScript, component tests, database lint, generated-type drift checks, 88
-transactional pgTAP checks, and a production build. Use `just --list` to discover individual
-commands.
+Run `just database-start` and `just browser-install` first. The check runs formatting verification,
+type-aware linting with warnings denied, TypeScript, 23 unit/component checks, public/private database
+lint, generated-type drift checks, 146 transactional pgTAP checks, a production build, and 21 real
+Chromium tests at 320, 768, and 1,440 CSS pixels. Browser tests use production preview on port 4174
+and create isolated, expiring local demo data. Do not point browser tests at a hosted database.
+Use `just --list` to discover individual commands.
 
 ## Planned delivery stages
 
@@ -110,4 +114,5 @@ commands.
 5. Add failure recovery, responsive polish, accessibility checks, and end-to-end tests.
 6. Provision infrastructure, deploy the public demo, and capture portfolio evidence.
 
-Commands and local setup instructions will be added in Stage 2, when executable tooling exists.
+Stages 1–5 are implemented. Stage 6 must verify hosted security and operational gates before the
+public demo is released.

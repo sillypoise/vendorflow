@@ -101,10 +101,45 @@ function StateFilter({
     );
 }
 
+function RequestPages({
+    page,
+    count,
+    set_page,
+}: {
+    page: number;
+    count: number;
+    set_page: (page: number) => void;
+}) {
+    return (
+        <nav className="pagination" aria-label="Request pages">
+            <button
+                disabled={page === 0}
+                type="button"
+                onClick={() => {
+                    set_page(page - 1);
+                }}
+            >
+                Previous page
+            </button>
+            <span>Page {page + 1}</span>
+            <button
+                disabled={page === 4 || count < 20}
+                type="button"
+                onClick={() => {
+                    set_page(page + 1);
+                }}
+            >
+                Next page
+            </button>
+        </nav>
+    );
+}
+
 function RequestList({ state_filter }: { state_filter: RequestState | "all" }) {
+    const [page, set_page] = useState(0);
     const requests_query = useQuery({
-        queryKey: ["vendor_requests", state_filter],
-        queryFn: () => list_vendor_requests(get_supabase_client(), state_filter),
+        queryKey: ["vendor_requests", state_filter, page],
+        queryFn: () => list_vendor_requests(get_supabase_client(), state_filter, page),
     });
     if (requests_query.isPending) return <output>Loading requests…</output>;
     if (requests_query.isError) {
@@ -122,20 +157,21 @@ function RequestList({ state_filter }: { state_filter: RequestState | "all" }) {
             </div>
         );
     }
-    if (requests_query.data.length === 0) {
-        return (
-            <div className="empty-state">
-                <h2>No requests match this view.</h2>
-                <p>Choose another status or create the first vendor request.</p>
-            </div>
-        );
-    }
     return (
-        <ul className="request-grid">
-            {requests_query.data.map((request) => (
-                <RequestCard key={request.id} request={request} />
-            ))}
-        </ul>
+        <>
+            {requests_query.data.length === 0 ? (
+                <div className="empty-state">
+                    <h2>No requests match this view.</h2>
+                    <p>Choose another status or page.</p>
+                </div>
+            ) : null}
+            <ul className="request-grid">
+                {requests_query.data.map((request) => (
+                    <RequestCard key={request.id} request={request} />
+                ))}
+            </ul>
+            <RequestPages page={page} count={requests_query.data.length} set_page={set_page} />
+        </>
     );
 }
 
@@ -161,7 +197,7 @@ export function RequestDashboardPage() {
                     <h2 id="request-list-heading">Current work</h2>
                     <StateFilter state={state_filter} set_state={set_state_filter} />
                 </div>
-                <RequestList state_filter={state_filter} />
+                <RequestList key={state_filter} state_filter={state_filter} />
             </section>
         </main>
     );

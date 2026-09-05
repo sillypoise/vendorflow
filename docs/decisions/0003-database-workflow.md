@@ -5,6 +5,9 @@
 - Decision owner: `@sillypoise`.
 - Contract owner: `@sillypoise`.
 
+Historical database-foundation record: [Stage 5](./0005-isolated-demo.md) removed shared seed login,
+introduced isolated demo limits and lifecycle exceptions, and added public/private schema linting.
+
 ## Context
 
 VendorFlow must prove that permissions and lifecycle rules survive direct API calls rather than

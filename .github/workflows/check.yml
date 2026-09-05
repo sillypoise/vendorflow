@@ -45,6 +45,9 @@ jobs:
             - name: Start local Supabase
               run: just database-start
 
+            - name: Install browser
+              run: just browser-install
+
             - name: Run application and database checks
               run: just check
 

@@ -152,6 +152,8 @@ Boundary failures use these stable application error codes:
 | `STALE_REVISION` | The expected revision no longer matches. | No |
 | `DEPENDENCY_UNAVAILABLE` | A required service is temporarily unavailable. | No partial mutation |
 | `INTERNAL_ERROR` | An unexpected bounded failure occurred. | No partial mutation |
+| `DEMO_EXPIRED` | The private workspace reached its fixed expiry. | No |
+| `DEMO_LIMIT_REACHED` | A demo request, revision, or control cap was reached. | No |
 
 Database functions raise SQLSTATE `P0001` with the stable error code as the message. Public errors
 expose that code and a safe user-facing message. They do not expose SQL, policies, stack traces,
@@ -164,13 +166,56 @@ return `PERMISSION_DENIED`.
 ## Invariants
 
 - Every request belongs to exactly one organization and one owner.
-- Every assigned reviewer is an active reviewer in the request organization.
+- Every assignment targets an active reviewer in the request organization, except the explicitly
+  bounded demo-persona nomination below.
 - Every request state is one of the six declared states.
 - Every successful transition increments the revision exactly once.
 - Every successful transition creates exactly one audit event in the same transaction.
 - Failed validation, authorization, revision, and transition checks create no request mutation or
   audit event.
 - Request and audit queries never return rows from another organization.
+
+## Private demo boundary
+
+Owner: `@sillypoise`. Version: `v1-draft`. Demo capabilities are issued only to Supabase-authenticated
+anonymous identities and never to a supplied user or organization identifier.
+
+- `start_demo()` accepts no arguments. It atomically creates one organization, active requester
+  membership, seeded request, lifecycle event, and private demo-control event. It returns the fixed
+  expiry timestamp. Repeated calls return the same timestamp; they never extend the 24-hour lifetime.
+- `demo_control(p_action text)` accepts exactly `requester`, `administrator`, `reviewer`, or `reset`
+  and returns no value. It re-authorizes the caller against their unexpired server-issued session
+  and active membership. Role selection is a requested action, not a trusted authority claim.
+- A demo administrator may nominate only their own identity as the future reviewer persona. They
+  must switch to reviewer before deciding. Ordinary organizations retain reviewer-role eligibility.
+- Reset deletes only the caller's organization's requests and lifecycle history, restores requester
+  role, and seeds a fresh draft. This is an explicit demo-only exception to lifecycle immutability;
+  private control events survive reset. Normal workflow functions cannot alter existing events.
+- Each session permits at most 100 live requests, request revision 100, and 200 successful role/reset
+  controls. Reset does not extend expiry or restore the control allowance. Workflow and control
+  mutations serialize on the session row before request locking.
+- At `expires_at <= statement_timestamp()`, RLS hides organization, membership, request, and audit
+  rows, and workflow/control mutations fail. Browser cache is not a security boundary.
+- `cleanup_expired_demos()` accepts no arguments and is executable only by `service_role`. Per call
+  it deletes at most one expired workspace and up to 100 anonymous identities abandoned without
+  membership or a workspace for at least 24 hours. It returns the number of identities deleted
+  (0–101), preserves live sessions and ordinary accounts, and can be repeated safely.
+- Ending the browser session signs out locally; server data remains until expiry and service-only
+  cleanup. Cleanup scheduling is an operational release requirement, not yet deployed.
+
+Invalid control inputs use `VALIDATION_FAILED`; absent/inactive capability uses `PERMISSION_DENIED`;
+expired sessions use `DEMO_EXPIRED`; caps use `DEMO_LIMIT_REACHED`. Unauthenticated callers have no
+function grants. Cleanup failures roll back the entire invocation. Tokens, session credentials, and
+request contents must not be included in control events or browser-test artifacts.
+
+The demo UI exposes at most five pages of 20 requests with deterministic ordering within each read.
+Status changes reset to page one; writes may move items between pages. Audit reads are ordered by
+resulting revision and capped at 100, matching the demo's revision cap. Ordinary organizations above
+these bounds require a separate read-contract review before the application supports them.
+
+Transport errors do not prove whether an atomic write committed. Browser calls time out after 15
+seconds, never automatically retry mutations, and instruct users to check current state before
+retrying. Creation is not idempotent across an ambiguous transport failure.
 
 ## Compatibility and evolution
 
@@ -185,7 +230,18 @@ in the same change. After version 1 is public:
 
 The contract currently has no deprecated fields or supported legacy versions.
 
-### 2026-09-05 pre-release delta
+### 2026-09-05 Stage 5 pre-release delta
+
+Classification: additive demo RPCs, limits, and errors, plus a breaking pre-release authentication
+cutover from shared password fixtures to anonymous private workspaces. Existing workflow RPC inputs,
+states, and outputs remain unchanged; demo assignment eligibility and reset are explicit scoped
+exceptions. Deploy the new migration before the new application; cut over Auth configuration and
+application together while offline. Do not serve the old shared-login application as a hosted demo.
+No external consumers or production sessions exist. Regenerate database types with the migration.
+Rollback requires an offline application/Auth cutover; removing demo tables is not a safe live
+rollback because RLS expiry and capabilities depend on them.
+
+### 2026-09-05 Stage 4 pre-release delta
 
 Stage 4 added a bounded membership display name for role-aware presentation. It does not change
 role or resource authority. Compatibility classification: additive pre-release field with no
@@ -210,3 +266,7 @@ Tests must verify:
 - Required text and numeric fields reject values immediately outside each declared bound.
 - Stale revisions fail without overwriting newer data.
 - Audit events are unchanged after every failed operation.
+- Independent demo visitors remain isolated through role changes, resets, and cleanup.
+- Inactive, expired, ordinary, and unauthenticated identities cannot acquire demo authority.
+- Demo limits accept the final valid count/revision and reject the next without mutation.
+- Cleanup preserves live/new identities and is safe to repeat.

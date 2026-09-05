@@ -25,6 +25,28 @@ a {
     color: inherit;
 }
 
+.skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -5rem;
+    padding: 0.75rem 1rem;
+    background: #fffefa;
+    z-index: 10;
+}
+.skip-link:focus {
+    top: 1rem;
+}
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+.pagination button {
+    padding: 0.6rem;
+}
+
 .site-shell {
     min-height: 100vh;
     overflow: hidden;
@@ -411,6 +433,28 @@ textarea {
     cursor: pointer;
 }
 
+.demo-toolbar {
+    width: min(100% - 3rem, 74rem);
+    margin: 1.5rem auto 0;
+    padding: 1rem 1.25rem;
+    border: 1px solid #b9c2bc;
+    border-radius: 0.8rem;
+    background: #eff5ef;
+}
+
+.demo-toolbar p {
+    margin: 0 0 0.75rem;
+    color: #32443a;
+}
+.demo-toolbar label {
+    min-width: 12rem;
+}
+.action-panel .button-row,
+.action-panel .inline-form {
+    flex-direction: column;
+    align-items: stretch;
+}
+
 .workspace-main {
     width: min(100% - 3rem, 74rem);
     margin: 0 auto;
@@ -540,7 +584,7 @@ dd {
     margin: 0.3rem 0 0;
     overflow-wrap: anywhere;
     line-height: 1.4;
-    text-transform: capitalize;
+    white-space: pre-wrap;
 }
 
 .empty-state {
@@ -726,6 +770,10 @@ dd {
         white-space: nowrap;
     }
 
+    .demo-toolbar {
+        width: calc(100% - 2rem);
+    }
+
     .workspace-main {
         width: min(100% - 2rem, 74rem);
         padding-top: 2rem;
@@ -773,5 +821,6 @@ dd {
     *::before,
     *::after {
         scroll-behavior: auto !important;
+        transition: none !important;
     }
 }

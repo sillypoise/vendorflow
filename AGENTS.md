@@ -44,7 +44,8 @@ If a rule should apply across multiple repositories, promote it into the guide p
 - Purpose: Vendor intake and approval portfolio product demonstrating internal workflows,
   PostgreSQL modeling, and resource-scoped permissions.
 - Primary languages: TypeScript and SQL; OpenTofu configuration will be added for infrastructure.
-- Key directories: `src/` contains the React application and colocated tests; `scripts/` contains
+- Key directories: `src/` contains the React application and colocated tests; `e2e/` contains real
+  Chromium workflow/accessibility checks; `scripts/` contains
   typed local tooling; `supabase/migrations/` owns schema changes; `supabase/tests/` contains pgTAP
   authorization and workflow checks; `supabase/seed.sql` contains fictional local data;
   `src/lib/database.types.ts` is generated from the database; `docs/` contains product, contract,
@@ -58,10 +59,10 @@ If a rule should apply across multiple repositories, promote it into the guide p
 
 - Install: `just install`.
 - Build: `just build`.
-- Test: `just test`; with local Supabase running, `just database-test`.
+- Test: `just test`; with local Supabase running, `just database-test` and `just browser-test`.
 - Lint: `just lint`; with local Supabase running, `just database-lint`.
 - Typecheck: `just typecheck`.
-- Validation: Run `just database-start`, then `just check`; also review contract changes against
+- Validation: Run `just database-start` and `just browser-install`, then `just check`; review against
   `docs/workflow-contract.md`.
 - Run one test: `just test-one path/to/test_file.ts`.
 
@@ -87,4 +88,6 @@ If a rule should apply across multiple repositories, promote it into the guide p
   before setting performance targets.
 - Security / privacy constraints: Derive authority from authenticated database context, fail closed,
   and never expose service-role credentials. Public demo users must not affect another visitor's
-  data. Use only fictional portfolio data.
+  data. Use only fictional portfolio data. Shared login has been removed; anonymous visitors receive
+  server-issued private workspaces and bounded role/reset capabilities. Hosted abuse protection and
+  service-only cleanup scheduling are release gates in `docs/decisions/0005-isolated-demo.md`.

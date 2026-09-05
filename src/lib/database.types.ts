@@ -208,6 +208,7 @@ export type Database = {
                     isSetofReturn: false;
                 };
             };
+            cleanup_expired_demos: { Args: never; Returns: number };
             create_vendor_request: {
                 Args: {
                     p_draft: Database["public"]["CompositeTypes"]["vendor_request_draft_input"];
@@ -237,6 +238,7 @@ export type Database = {
                     isSetofReturn: false;
                 };
             };
+            demo_control: { Args: { p_action: string }; Returns: undefined };
             review_vendor_request: {
                 Args: {
                     p_decision: string;
@@ -252,6 +254,7 @@ export type Database = {
                     isSetofReturn: false;
                 };
             };
+            start_demo: { Args: never; Returns: string };
             submit_vendor_request: {
                 Args: { p_expected_revision: number; p_request_id: string };
                 Returns: Database["public"]["CompositeTypes"]["vendor_request_transition_result"];

@@ -10,6 +10,7 @@ import {
     type VendorRequest,
 } from "../lib/vendor_requests";
 import { useApplicationContext, type ApplicationContext } from "./authenticated_layout";
+import { LoadingPage } from "./feedback";
 import { PermittedActions } from "./request_actions";
 import { format_spend, format_timestamp, request_state_label } from "./request_presenters";
 
@@ -63,7 +64,7 @@ function RequestFacts({ request }: { request: VendorRequest }) {
 function AuditHistory({ events }: { events: AuditEvent[] }) {
     return (
         <section className="detail-card" aria-labelledby="history-heading">
-            <h2 id="history-heading">Immutable history</h2>
+            <h2 id="history-heading">Decision history</h2>
             <ol className="timeline">
                 {events.map((event) => (
                     <li key={event.id}>
@@ -132,12 +133,7 @@ export function RequestDetailPage() {
         queryFn: () => list_audit_events(get_supabase_client(), requestId),
     });
     if (request_query.isPending || audit_query.isPending) {
-        return (
-            <DetailMessage
-                title="Loading request"
-                message="Retrieving the latest revision and history…"
-            />
-        );
+        return <LoadingPage message="Retrieving the latest revision and history…" />;
     }
     if (request_query.isError || audit_query.isError) {
         const error = request_query.error ?? audit_query.error;
@@ -160,9 +156,20 @@ function DetailMessage({ message, title }: { message: string; title: string }) {
             <div className="empty-state">
                 <h1>{title}</h1>
                 <p role="alert">{message}</p>
-                <Link className="text-link" to="/requests">
-                    Return to requests
-                </Link>
+                <div className="button-row">
+                    <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => {
+                            globalThis.location.reload();
+                        }}
+                    >
+                        Reload request
+                    </button>
+                    <Link className="text-link" to="/requests">
+                        Return to requests
+                    </Link>
+                </div>
             </div>
         </main>
     );

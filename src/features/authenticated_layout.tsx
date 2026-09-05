@@ -1,17 +1,19 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { Link, Outlet } from "@tanstack/react-router";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 import type { Database } from "../lib/database.types";
 import { get_supabase_client } from "../lib/supabase";
 import {
     get_membership,
     get_organization_name,
+    throw_database_error,
     workflow_error_message,
     type Membership,
 } from "../lib/vendor_requests";
-import { ErrorPage, LoadingPage } from "./feedback";
+import { DemoControls } from "./demo_controls";
+import { LoadingPage } from "./feedback";
 import { SignInPage } from "./sign_in_page";
 
 type SessionState = { status: "loading" } | { status: "ready"; session: Session | null };
@@ -20,7 +22,6 @@ export type ApplicationContext = {
     organization_name: string;
     session: Session;
 };
-
 const ApplicationContextProvider = createContext<ApplicationContext | null>(null);
 
 export function useApplicationContext(): ApplicationContext {
@@ -29,13 +30,38 @@ export function useApplicationContext(): ApplicationContext {
     return context;
 }
 
-function WorkspaceHeader({
-    context,
-    on_sign_out,
-}: {
-    context: ApplicationContext;
-    on_sign_out: () => void;
-}) {
+function EndSessionButton() {
+    const [error, set_error] = useState(false);
+    const [pending, set_pending] = useState(false);
+    async function end_session() {
+        set_pending(true);
+        try {
+            const result = await get_supabase_client().auth.signOut({ scope: "local" });
+            if (result.error !== null) throw result.error;
+            globalThis.location.assign("/");
+        } catch {
+            set_error(true);
+            set_pending(false);
+        }
+    }
+    return (
+        <div>
+            <button
+                className="text-button"
+                disabled={pending}
+                type="button"
+                onClick={() => {
+                    void end_session();
+                }}
+            >
+                End session
+            </button>
+            {error ? <p role="alert">Could not end the session. Please retry.</p> : null}
+        </div>
+    );
+}
+
+function WorkspaceHeader({ context }: { context: ApplicationContext }) {
     return (
         <header className="workspace-header">
             <Link className="brand" to="/" aria-label="VendorFlow home">
@@ -45,106 +71,97 @@ function WorkspaceHeader({
                 <span>VendorFlow</span>
             </Link>
             <nav aria-label="Workspace navigation">
-                <Link to="/requests" activeProps={{ "aria-current": "page" }}>
-                    Requests
-                </Link>
+                <Link to="/requests">Requests</Link>
             </nav>
             <div className="identity-block">
                 <span>{context.membership.display_name}</span>
                 <small>{context.membership.role}</small>
             </div>
-            <button className="text-button" onClick={on_sign_out} type="button">
-                Sign out
-            </button>
+            <EndSessionButton />
         </header>
     );
 }
 
-function useWorkspaceSignOut() {
-    const navigate = useNavigate();
-    const query_client = useQueryClient();
-    async function sign_out() {
-        try {
-            const { error } = await get_supabase_client().auth.signOut({ scope: "local" });
-            if (error !== null) {
-                globalThis.location.reload();
-                return;
-            }
-            query_client.clear();
-            await navigate({ to: "/" });
-        } catch {
-            globalThis.location.reload();
-        }
-    }
-    return () => {
-        void sign_out();
-    };
-}
-
-function Workspace({ session }: { session: Session }) {
-    const handle_sign_out = useWorkspaceSignOut();
-    const membership_query = useQuery({
-        queryKey: ["membership", session.user.id],
-        queryFn: () => get_membership(get_supabase_client(), session.user.id),
-    });
-    const organization_query = useQuery({
-        enabled: membership_query.data !== undefined,
-        queryKey: ["organization", membership_query.data?.organization_id],
-        queryFn: () =>
-            get_organization_name(
-                get_supabase_client(),
-                membership_query.data?.organization_id ?? "",
-            ),
-    });
-    const context = useMemo<ApplicationContext | null>(() => {
-        if (membership_query.data === undefined) return null;
-        if (organization_query.data === undefined) return null;
-        return {
-            membership: membership_query.data,
-            organization_name: organization_query.data,
-            session,
-        };
-    }, [membership_query.data, organization_query.data, session]);
-    if (membership_query.isPending || organization_query.isPending) {
-        return <LoadingPage message="Loading your organization…" />;
-    }
-    if (membership_query.isError || organization_query.isError || context === null) {
-        const error = membership_query.error ?? organization_query.error;
-        return <ErrorPage message={workflow_error_message(error)} />;
-    }
+function PrivateQueries({ context }: { context: ApplicationContext }) {
+    // Mounted per identity and role, so another session can never reuse prior private query data.
+    const [client] = useState(
+        () =>
+            new QueryClient({
+                defaultOptions: {
+                    queries: { retry: false, staleTime: 0, gcTime: 60_000 },
+                    mutations: { retry: false },
+                },
+            }),
+    );
     return (
-        <div className="workspace-shell">
-            <WorkspaceHeader context={context} on_sign_out={handle_sign_out} />
+        <QueryClientProvider client={client}>
             <ApplicationContextProvider.Provider value={context}>
                 <Outlet />
             </ApplicationContextProvider.Provider>
+        </QueryClientProvider>
+    );
+}
+
+function Workspace({ session }: { session: Session }) {
+    const context_query = useQuery({
+        queryKey: ["workspace", session.user.id],
+        retry: false,
+        staleTime: 0,
+        refetchInterval: 30_000,
+        queryFn: async (): Promise<ApplicationContext> => {
+            const client = get_supabase_client();
+            const provision = await client.rpc("start_demo");
+            throw_database_error(provision.error);
+            const membership = await get_membership(client, session.user.id);
+            const organization_name = await get_organization_name(
+                client,
+                membership.organization_id,
+            );
+            return { membership, organization_name, session };
+        },
+    });
+    if (context_query.isError)
+        return (
+            <main className="message-page">
+                <h1>Workspace unavailable</h1>
+                <p role="alert">{workflow_error_message(context_query.error)}</p>
+                <button
+                    type="button"
+                    onClick={() => {
+                        void context_query.refetch();
+                    }}
+                >
+                    Retry
+                </button>
+                <EndSessionButton />
+            </main>
+        );
+    if (context_query.isPending) return <LoadingPage message="Preparing your private workspace…" />;
+    const context = context_query.data;
+    return (
+        <div className="workspace-shell">
+            <WorkspaceHeader context={context} />
+            <DemoControls role={context.membership.role} />
+            <PrivateQueries
+                key={`${session.user.id}:${context.membership.role}`}
+                context={context}
+            />
         </div>
     );
 }
 
 function useSessionState(client: SupabaseClient<Database> | null): SessionState {
-    const [session_state, set_session_state] = useState<SessionState>({ status: "loading" });
+    const [state, set_state] = useState<SessionState>({ status: "loading" });
     useEffect(() => {
         let active = true;
         let unsubscribe = () => {};
         if (client !== null) {
-            void client.auth.getSession().then(
-                ({ data, error }) => {
-                    if (!active) return;
-                    set_session_state({
-                        status: "ready",
-                        session: error === null ? data.session : null,
-                    });
-                },
-                () => {
-                    if (active) set_session_state({ status: "ready", session: null });
-                },
-            );
-            const { data: listener } = client.auth.onAuthStateChange((_event, session) => {
-                if (active) set_session_state({ status: "ready", session });
+            // INITIAL_SESSION and subsequent events have one ordered source, avoiding a getSession race.
+            const { data } = client.auth.onAuthStateChange((_event, session) => {
+                if (active) set_state({ status: "ready", session });
             });
             unsubscribe = () => {
-                listener.subscription.unsubscribe();
+                data.subscription.unsubscribe();
             };
         }
         return () => {
@@ -152,7 +169,7 @@ function useSessionState(client: SupabaseClient<Database> | null): SessionState 
             unsubscribe();
         };
     }, [client]);
-    return session_state;
+    return state;
 }
 
 export function AuthenticatedLayout() {
@@ -163,13 +180,16 @@ export function AuthenticatedLayout() {
             return null;
         }
     });
-    const session_state = useSessionState(client);
-    if (client === null) {
+    const state = useSessionState(client);
+    if (client === null)
         return (
-            <ErrorPage message="Supabase is not configured. Start the local database and retry." />
+            <main className="message-page">
+                <h1>Setup required</h1>
+                <p>Start the local database, then reload this page.</p>
+                <a href="/">Return home</a>
+            </main>
         );
-    }
-    if (session_state.status === "loading") return <LoadingPage message="Checking your session…" />;
-    if (session_state.session === null) return <SignInPage />;
-    return <Workspace session={session_state.session} />;
+    if (state.status === "loading") return <LoadingPage message="Checking your session…" />;
+    if (state.session === null) return <SignInPage />;
+    return <Workspace key={state.session.user.id} session={state.session} />;
 }

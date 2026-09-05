@@ -5,6 +5,9 @@
 - Decision owner: `@sillypoise`.
 - Contract owner: `@sillypoise`.
 
+Historical Stage 4 record: shared password login and 100-row list reads below were superseded by
+[Stage 5](./0005-isolated-demo.md). They are not current setup instructions.
+
 ## Context
 
 Stage 4 must expose the database workflow as a usable vertical product flow without moving trust to

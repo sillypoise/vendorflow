@@ -3,10 +3,18 @@ begin;
 create extension if not exists pgtap with schema extensions;
 
 -- The fixture is rebuilt inside this transaction so repeated runs are independent of seed state.
-delete from public.vendor_request_audit_events;
-delete from public.vendor_requests;
-delete from public.organization_memberships;
-delete from public.organizations;
+delete from public.vendor_request_audit_events where organization_id in (
+    '10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002'
+);
+delete from public.vendor_requests where organization_id in (
+    '10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002'
+);
+delete from public.organization_memberships where organization_id in (
+    '10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002'
+);
+delete from public.organizations where id in (
+    '10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002'
+);
 delete from auth.users where email like '%@vendorflow.example';
 
 insert into auth.users (id, aud, role, email, created_at, updated_at, is_sso_user, is_anonymous)

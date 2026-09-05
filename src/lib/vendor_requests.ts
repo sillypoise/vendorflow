@@ -20,6 +20,8 @@ const workflow_error_codes = [
     "STALE_REVISION",
     "DEPENDENCY_UNAVAILABLE",
     "INTERNAL_ERROR",
+    "DEMO_EXPIRED",
+    "DEMO_LIMIT_REACHED",
 ] as const;
 
 export type WorkflowErrorCode = (typeof workflow_error_codes)[number];
@@ -34,11 +36,17 @@ export class WorkflowError extends Error {
     }
 }
 
-function throw_database_error(error: PostgrestError | null): void {
+export function throw_database_error(error: Pick<PostgrestError, "code" | "message"> | null): void {
     if (error === null) {
         return;
     }
 
+    if (error.code === "PGRST301" || error.code === "PGRST303") {
+        throw new WorkflowError("AUTHENTICATION_REQUIRED");
+    }
+    if (error.code === "42501") throw new WorkflowError("PERMISSION_DENIED");
+    if (error.code === "") throw new WorkflowError("DEPENDENCY_UNAVAILABLE");
+    if (error.code !== "P0001") throw new WorkflowError("INTERNAL_ERROR");
     for (const code of workflow_error_codes) {
         if (error.message === code) {
             throw new WorkflowError(code);
@@ -51,7 +59,11 @@ export function workflow_error_message(error: unknown): string {
     const code = error instanceof WorkflowError ? error.code : "INTERNAL_ERROR";
     switch (code) {
         case "AUTHENTICATION_REQUIRED":
-            return "Your session has expired. Sign in again to continue.";
+            return "Your session has expired. End this session and start a new demo.";
+        case "DEMO_EXPIRED":
+            return "This 24-hour workspace has expired. End this session and start a new demo.";
+        case "DEMO_LIMIT_REACHED":
+            return "This demo reached its safety limit. End this session and start a new demo.";
         case "PERMISSION_DENIED":
             return "Your role does not permit this action.";
         case "REQUEST_NOT_FOUND":
@@ -63,7 +75,10 @@ export function workflow_error_message(error: unknown): string {
         case "STALE_REVISION":
             return "A newer version exists. Refresh before making another change.";
         case "DEPENDENCY_UNAVAILABLE":
-            return "The workflow service is temporarily unavailable. Try again shortly.";
+            return (
+                "The workflow service is temporarily unavailable. A write may have completed. " +
+                "Check the request list before retrying."
+            );
         case "INTERNAL_ERROR":
             return "VendorFlow could not complete the request. Try again.";
         default:
@@ -104,12 +119,17 @@ export async function get_organization_name(
 export async function list_vendor_requests(
     client: DatabaseClient,
     state: RequestState | "all",
+    page: number,
 ): Promise<VendorRequest[]> {
+    if (!Number.isInteger(page) || page < 0 || page > 4) {
+        throw new WorkflowError("VALIDATION_FAILED");
+    }
     let query = client
         .from("vendor_requests")
         .select("*")
         .order("updated_at", { ascending: false, nullsFirst: false })
-        .limit(100);
+        .order("id", { ascending: true, nullsFirst: false })
+        .range(page * 20, page * 20 + 19);
     if (state !== "all") {
         query = query.eq("state", state);
     }
@@ -122,6 +142,9 @@ export async function get_vendor_request(
     client: DatabaseClient,
     request_id: string,
 ): Promise<VendorRequest> {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(request_id)) {
+        throw new WorkflowError("REQUEST_NOT_FOUND");
+    }
     const { data, error } = await client
         .from("vendor_requests")
         .select("*")
@@ -142,7 +165,7 @@ export async function list_audit_events(
         .from("vendor_request_audit_events")
         .select("*")
         .eq("request_id", request_id)
-        .order("created_at", { ascending: true, nullsFirst: false })
+        .order("resulting_revision", { ascending: true, nullsFirst: false })
         .limit(100);
     throw_database_error(error);
     return data ?? [];
@@ -152,7 +175,8 @@ export async function list_reviewers(client: DatabaseClient): Promise<Membership
     const { data, error } = await client
         .from("organization_memberships")
         .select("*")
-        .eq("role", "reviewer")
+        // In the private demo, the visitor nominates their own reviewer persona as administrator.
+        .in("role", ["reviewer", "administrator"])
         .eq("active", true)
         .order("display_name", { ascending: true, nullsFirst: false })
         .limit(100);

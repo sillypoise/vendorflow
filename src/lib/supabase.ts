@@ -14,8 +14,8 @@ export function get_supabase_client(): SupabaseClient<Database> {
     if (api_url.length === 0) {
         throw new Error("SUPABASE_CONFIGURATION_MISSING");
     }
-    if (publishable_key.length === 0) {
-        throw new Error("SUPABASE_CONFIGURATION_MISSING");
+    if (!/^sb_publishable_[A-Za-z0-9_-]{20,}$/u.test(publishable_key)) {
+        throw new Error("SUPABASE_CONFIGURATION_INVALID");
     }
 
     const parsed_url = new URL(api_url);
@@ -33,7 +33,20 @@ export function get_supabase_client(): SupabaseClient<Database> {
             persistSession: true,
         },
         db: { schema: "public" },
-        global: { headers: { "X-Client-Info": "vendorflow-web/0.1.0" } },
+        global: {
+            headers: { "X-Client-Info": "vendorflow-web/0.1.0" },
+            fetch: (input, options) => {
+                const timeout = AbortSignal.timeout(15_000);
+                const signal = options?.signal;
+                return fetch(input, {
+                    ...options,
+                    signal:
+                        signal === null || signal === undefined
+                            ? timeout
+                            : AbortSignal.any([signal, timeout]),
+                });
+            },
+        },
         realtime: { params: { eventsPerSecond: 1 } },
     });
     return supabase_client;

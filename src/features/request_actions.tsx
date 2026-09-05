@@ -147,13 +147,13 @@ type ReviewDecision = "approve" | "reject" | "request_changes";
 function parse_review_decision(value: string): ReviewDecision {
     if (value === "reject") return value;
     if (value === "request_changes") return value;
-    return "approve";
+    if (value === "approve") return value;
+    throw new Error("Unsupported review decision.");
 }
 
 function review_reason_is_invalid(decision: ReviewDecision, reason: string): boolean {
     const reason_required = decision === "reject" || decision === "request_changes";
-    if (!reason_required) return reason.length > 1000;
-    if (reason.length === 0) return true;
+    if (reason.length === 0) return reason_required;
     if (reason.length > 1000) return true;
     return reason !== reason.trim();
 }

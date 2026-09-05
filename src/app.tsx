@@ -17,7 +17,20 @@ function PublicHeader() {
 
 export function RootLayout() {
     return (
-        <div className="site-shell">
+        <div className="site-shell" id="main-content">
+            <a
+                className="skip-link"
+                href="#main-content"
+                onClick={(event) => {
+                    const main = document.querySelector("main");
+                    if (main === null) return;
+                    event.preventDefault();
+                    main.tabIndex = -1;
+                    main.focus();
+                }}
+            >
+                Skip to main content
+            </a>
             <Suspense
                 fallback={
                     <main className="message-page">
@@ -76,7 +89,7 @@ export function HomePage() {
                             <span className="status-dot" aria-hidden="true" />
                             <div>
                                 <strong>Database-backed workflow available</strong>
-                                <span>Use fictional local identities to exercise each role.</span>
+                                <span>Start a private fictional workspace and try each role.</span>
                             </div>
                         </div>
                     </div>

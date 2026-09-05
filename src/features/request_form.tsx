@@ -1,6 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useBlocker, useNavigate, useParams } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 
 import { get_supabase_client } from "../lib/supabase";
@@ -22,18 +22,23 @@ import {
 
 function useRequestEditorForm(
     default_values: RequestFormValues,
-    save: (values: RequestFormValues) => Promise<void>,
+    save: (values: RequestFormValues) => Promise<VendorRequest | null>,
 ) {
+    const navigate = useNavigate();
     return useForm({
         defaultValues: default_values,
-        onSubmit: ({ value }) => save(value),
+        onSubmit: async ({ value, formApi }) => {
+            const saved = await save(value);
+            if (saved === null) return;
+            formApi.reset(value);
+            await navigate({ params: { requestId: saved.id }, to: "/requests/$requestId" });
+        },
     });
 }
 
 export type RequestEditorForm = ReturnType<typeof useRequestEditorForm>;
 
 function useRequestFormController(request: VendorRequest | null) {
-    const navigate = useNavigate();
     const query_client = useQueryClient();
     const [submit_error, set_submit_error] = useState<string | null>(null);
     const save_mutation = useMutation({
@@ -50,13 +55,12 @@ function useRequestFormController(request: VendorRequest | null) {
             set_submit_error(null);
             try {
                 const saved_request = await save_mutation.mutateAsync(values);
+                query_client.setQueryData(["vendor_request", saved_request.id], saved_request);
                 await query_client.invalidateQueries({ queryKey: ["vendor_requests"] });
-                await navigate({
-                    params: { requestId: saved_request.id },
-                    to: "/requests/$requestId",
-                });
+                return saved_request;
             } catch (error) {
                 set_submit_error(workflow_error_message(error));
+                return null;
             }
         },
     );
@@ -109,8 +113,21 @@ function FormActions({
     );
 }
 
+function UnsavedChanges({ form }: { form: RequestEditorForm }) {
+    useBlocker({
+        shouldBlockFn: () =>
+            form.state.isDirty && !globalThis.confirm("Discard your unsaved changes?"),
+        enableBeforeUnload: () => form.state.isDirty,
+        disabled: false,
+        withResolver: false,
+    });
+    return null;
+}
+
 function RequestForm({ request }: { request: VendorRequest | null }) {
-    const { form, submit_error } = useRequestFormController(request);
+    // Capture the edit revision once; a background refresh must not silently authorize a stale save.
+    const [initial_request] = useState(request);
+    const { form, submit_error } = useRequestFormController(initial_request);
     return (
         <form
             className="request-form"
@@ -120,10 +137,26 @@ function RequestForm({ request }: { request: VendorRequest | null }) {
                 void form.handleSubmit();
             }}
         >
+            <UnsavedChanges form={form} />
             <RequestFields form={form} />
             {submit_error === null ? null : (
                 <div className="error-banner full-field" role="alert">
-                    {submit_error}
+                    <p>{submit_error} Your unsaved values have been kept.</p>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (
+                                globalThis.confirm(
+                                    "Discard unsaved changes and load the latest revision?",
+                                )
+                            ) {
+                                form.reset();
+                                globalThis.location.reload();
+                            }
+                        }}
+                    >
+                        Reload latest revision
+                    </button>
                 </div>
             )}
             <FormActions form={form} request={request} />

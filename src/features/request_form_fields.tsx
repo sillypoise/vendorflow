@@ -8,19 +8,27 @@ import {
 
 function FieldError({ errors }: { errors: unknown[] }) {
     const message = errors.find((error) => typeof error === "string");
-    return typeof message === "string" ? <span className="field-error">{message}</span> : null;
+    return typeof message === "string" ? (
+        <span className="field-error" role="alert">
+            {message}
+        </span>
+    ) : null;
 }
 
 function LegalNameField({ form }: { form: RequestEditorForm }) {
     return (
         <form.Field
             name="vendor_legal_name"
-            validators={{ onBlur: ({ value }) => validate_legal_name(value) }}
+            validators={{
+                onBlur: ({ value }) => validate_legal_name(value),
+                onSubmit: ({ value }) => validate_legal_name(value),
+            }}
         >
             {(field) => (
                 <label>
                     Vendor legal name
                     <input
+                        aria-invalid={field.state.meta.errors.length > 0}
                         maxLength={161}
                         onBlur={field.handleBlur}
                         value={field.state.value}
@@ -39,12 +47,16 @@ function WebsiteField({ form }: { form: RequestEditorForm }) {
     return (
         <form.Field
             name="vendor_website"
-            validators={{ onBlur: ({ value }) => validate_website(value) }}
+            validators={{
+                onBlur: ({ value }) => validate_website(value),
+                onSubmit: ({ value }) => validate_website(value),
+            }}
         >
             {(field) => (
                 <label>
                     Vendor website
                     <input
+                        aria-invalid={field.state.meta.errors.length > 0}
                         placeholder="https://vendor.example"
                         type="url"
                         onBlur={field.handleBlur}
@@ -89,12 +101,16 @@ function JustificationField({ form }: { form: RequestEditorForm }) {
     return (
         <form.Field
             name="business_justification"
-            validators={{ onBlur: ({ value }) => validate_justification(value) }}
+            validators={{
+                onBlur: ({ value }) => validate_justification(value),
+                onSubmit: ({ value }) => validate_justification(value),
+            }}
         >
             {(field) => (
                 <label className="full-field">
                     Business justification
                     <textarea
+                        aria-invalid={field.state.meta.errors.length > 0}
                         maxLength={2001}
                         rows={5}
                         onBlur={field.handleBlur}
@@ -114,12 +130,17 @@ function SpendField({ form }: { form: RequestEditorForm }) {
     return (
         <form.Field
             name="annual_spend_minor_units"
-            validators={{ onBlur: ({ value }) => validate_spend(value) }}
+            validators={{
+                onBlur: ({ value }) => validate_spend(value),
+                onSubmit: ({ value }) => validate_spend(value),
+            }}
         >
             {(field) => (
                 <label>
                     Expected annual spend (cents)
                     <input
+                        aria-invalid={field.state.meta.errors.length > 0}
+                        maxLength={10}
                         inputMode="numeric"
                         onBlur={field.handleBlur}
                         value={field.state.value}

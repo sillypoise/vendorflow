@@ -1,13 +1,13 @@
 -- All records are fictional and exist only for local portfolio development.
 insert into auth.users (
-    instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+    instance_id, id, aud, role, email, email_confirmed_at,
     confirmation_token, recovery_token, email_change_token_new, email_change,
     phone_change, phone_change_token, reauthentication_token, raw_app_meta_data,
     raw_user_meta_data, created_at, updated_at, is_sso_user, is_anonymous
 )
 select
     '00000000-0000-0000-0000-000000000000', fixture.id, 'authenticated', 'authenticated',
-    fixture.email, '$2a$10$TQ/WXmingWBWR6Md0Cnh8.oUxZgXCz5RoF6v2DQ/ZqEaz8k4X0UOO',
+    fixture.email,
     statement_timestamp(), '', '', '', '', '', '', '',
     '{"provider":"email","providers":["email"]}',
     jsonb_build_object('full_name', fixture.full_name), statement_timestamp(),
