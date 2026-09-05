@@ -90,7 +90,29 @@ browser-test: build
     pnpm exec playwright test
 
 # Run the required non-deployment checks against a running local database.
-check: format-check lint typecheck test database-check browser-test
+check: format-check lint typecheck test database-check browser-test infrastructure-validate
+
+# Install the pinned infrastructure providers; requires the state passphrase environment variable.
+infrastructure-init:
+    umask 077; tofu -chdir=infra init -input=false -lockfile=readonly
+
+# Format the infrastructure configuration.
+infrastructure-format:
+    tofu -chdir=infra fmt -check=false
+
+# Validate infrastructure without accessing hosted resources.
+infrastructure-validate:
+    tofu -chdir=infra fmt -check
+    tofu -chdir=infra validate
+
+# Save an encrypted plan for operator review; never enable provider debug logging.
+infrastructure-plan:
+    umask 077; tofu -chdir=infra plan -input=false -lock-timeout=30s -out=release.tfplan
+
+# Apply only the previously reviewed encrypted plan.
+infrastructure-apply approval:
+    test {{ quote(approval) }} = approve-vendorflow-plan
+    umask 077; tofu -chdir=infra apply -input=false -lock-timeout=30s release.tfplan
 
 # Print the active project tool versions.
 runtime:

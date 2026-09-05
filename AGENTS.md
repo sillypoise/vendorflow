@@ -43,7 +43,7 @@ If a rule should apply across multiple repositories, promote it into the guide p
 <!-- BEGIN REPO CONTEXT -->
 - Purpose: Vendor intake and approval portfolio product demonstrating internal workflows,
   PostgreSQL modeling, and resource-scoped permissions.
-- Primary languages: TypeScript and SQL; OpenTofu configuration will be added for infrastructure.
+- Primary languages: TypeScript, SQL, and OpenTofu configuration in `infra/`.
 - Key directories: `src/` contains the React application and colocated tests; `e2e/` contains real
   Chromium workflow/accessibility checks; `scripts/` contains
   typed local tooling; `supabase/migrations/` owns schema changes; `supabase/tests/` contains pgTAP
@@ -62,7 +62,8 @@ If a rule should apply across multiple repositories, promote it into the guide p
 - Test: `just test`; with local Supabase running, `just database-test` and `just browser-test`.
 - Lint: `just lint`; with local Supabase running, `just database-lint`.
 - Typecheck: `just typecheck`.
-- Validation: Run `just database-start` and `just browser-install`, then `just check`; review against
+- Validation: Run `just database-start`, `just browser-install`, and `just infrastructure-init`,
+  then `just check`; review against
   `docs/workflow-contract.md`.
 - Run one test: `just test-one path/to/test_file.ts`.
 
@@ -91,3 +92,7 @@ If a rule should apply across multiple repositories, promote it into the guide p
   data. Use only fictional portfolio data. Shared login has been removed; anonymous visitors receive
   server-issued private workspaces and bounded role/reset capabilities. Hosted abuse protection and
   service-only cleanup scheduling are release gates in `docs/decisions/0005-isolated-demo.md`.
+- Infrastructure state: `infra/terraform.tfstate` is encrypted, local, and operator-owned. Load
+  `secret` in zsh for provider credentials and `TF_VAR_state_passphrase`; never print their values.
+  Preserve state across interrupted applies. Partial bootstrap status and containment are recorded
+  in `docs/decisions/0006-hosted-deployment.md`.

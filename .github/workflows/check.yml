@@ -39,6 +39,15 @@ jobs:
               with:
                   just-version: 1.43.1
 
+            - name: Install OpenTofu
+              uses: opentofu/setup-opentofu@9d84900f3238fab8cd84ce47d658d25dd008be2f # v1
+              with:
+                  tofu_version: 1.11.5
+                  tofu_wrapper: false
+
+            - name: Initialize infrastructure providers without hosted credentials
+              run: just infrastructure-init
+
             - name: Install locked dependencies
               run: just install
 

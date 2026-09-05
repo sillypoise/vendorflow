@@ -25,10 +25,10 @@ The test suite covers valid and invalid transitions, cross-user access, and role
 
 ## Current status
 
-Stage 5, experience hardening. The complete workflow now includes private visitor workspaces,
-server-enforced demo expiry and limits, safe role switching/reset, stale-edit recovery, and real
-browser accessibility and workflow checks at three viewport widths. Nothing has been deployed yet.
-Hosted abuse protection, cleanup scheduling, infrastructure, and deployment remain Stage 6 gates.
+Stage 6 is in progress. The hardened local workflow includes isolated visitor workspaces and real
+browser checks. A Pages project and Supabase project have been provisioned, but no frontend has been
+uploaded and hosted signup is disabled. Turnstile creation is blocked on Cloudflare token write
+permission. Cleanup, hosted verification, and public release remain pending.
 
 - [Product brief](./docs/product-brief.md)
 - [Workflow contract](./docs/workflow-contract.md)
@@ -38,6 +38,7 @@ Hosted abuse protection, cleanup scheduling, infrastructure, and deployment rema
 - [Application workflow decision](./docs/decisions/0004-application-workflow.md)
 - [Isolated demo decision](./docs/decisions/0005-isolated-demo.md)
 - [Stage 5 validation evidence and limitations](./docs/stage-5-validation.md)
+- [Hosted deployment and bootstrap status](./docs/decisions/0006-hosted-deployment.md)
 
 ## Planned stack
 
@@ -58,6 +59,7 @@ Hosted abuse protection, cleanup scheduling, infrastructure, and deployment rema
 - pnpm 10.33.2.
 - just 1.43 or newer.
 - Rootless Podman 5.7 or newer.
+- OpenTofu 1.11.x (CI pins 1.11.5).
 
 Use the repository commands rather than duplicating their internal steps:
 
@@ -98,11 +100,12 @@ details.
 just check
 ```
 
-Run `just database-start` and `just browser-install` first. The check runs formatting verification,
+Run `just database-start`, `just browser-install`, and `just infrastructure-init` first. The check runs formatting verification,
 type-aware linting with warnings denied, TypeScript, 23 unit/component checks, public/private database
 lint, generated-type drift checks, 146 transactional pgTAP checks, a production build, and 21 real
 Chromium tests at 320, 768, and 1,440 CSS pixels. Browser tests use production preview on port 4174
-and create isolated, expiring local demo data. Do not point browser tests at a hosted database.
+and create isolated, expiring local demo data. Infrastructure formatting and validation also run,
+without a hosted plan or apply. Do not point browser tests at a hosted database.
 Use `just --list` to discover individual commands.
 
 ## Planned delivery stages
@@ -114,5 +117,5 @@ Use `just --list` to discover individual commands.
 5. Add failure recovery, responsive polish, accessibility checks, and end-to-end tests.
 6. Provision infrastructure, deploy the public demo, and capture portfolio evidence.
 
-Stages 1–5 are implemented. Stage 6 must verify hosted security and operational gates before the
-public demo is released.
+Stages 1–5 are implemented. Stage 6 bootstrap has started; hosted security and operational gates
+must pass before the public demo is released.
