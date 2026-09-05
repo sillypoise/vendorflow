@@ -18,7 +18,8 @@ identifiers supplied by a client are never accepted as authority.
 
 All reads and writes are scoped to the authenticated user's active organization. A failed or absent
 policy decision denies the operation. Version 1 permits one organization membership per user; an
-inactive membership grants no access.
+inactive membership grants no access. Membership display names are presentation data and never an
+authority claim.
 
 ## Required request fields
 
@@ -183,6 +184,12 @@ in the same change. After version 1 is public:
 - Mixed schema/application versions must be tested before a database migration is deployed.
 
 The contract currently has no deprecated fields or supported legacy versions.
+
+### 2026-09-05 pre-release delta
+
+Stage 4 added a bounded membership display name for role-aware presentation. It does not change
+role or resource authority. Compatibility classification: additive pre-release field with no
+external consumers.
 
 ### 2026-09-04 pre-release delta
 

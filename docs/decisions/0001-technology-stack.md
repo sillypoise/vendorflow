@@ -90,9 +90,9 @@ Stage 2 must demonstrate:
 3. No service-role credential in browser artifacts or repository files.
 
 Stage 2 satisfied these gates on 2026-09-04. The tested Podman workflow and temporary Supabase CLI
-pin are recorded in [decision 0002](./0002-local-supabase-runtime.md). The application currently
-installs TanStack Router because routing has a current consumer. TanStack Query, TanStack Form, and
-the Supabase browser client remain deferred until a working feature consumes each dependency.
+pin are recorded in [decision 0002](./0002-local-supabase-runtime.md). Stage 4 now consumes TanStack
+Router for workflow routes, TanStack Query for bounded server state, TanStack Form for draft input,
+and the Supabase browser client for authenticated RLS and RPC calls.
 
 Stage 6 must demonstrate:
 

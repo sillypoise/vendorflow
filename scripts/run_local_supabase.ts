@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const maximum_service_attempts = 50;
 const service_attempt_interval_ms = 100;
+const supabase_command_timeout_ms = 300_000;
 const supabase_exclusions = [
     "realtime",
     "storage-api",
@@ -43,6 +44,46 @@ function sanitize_failure_output(output: string): string {
         .slice(-120)
         .join("\n")
         .slice(-20_000);
+}
+
+function write_frontend_environment(socket_path: string): void {
+    assert.ok(socket_path.startsWith("/"));
+    assert.ok(socket_path.endsWith(".sock"));
+
+    const status_result = spawnSync("pnpm", ["exec", "supabase", "status", "--output", "env"], {
+        encoding: "utf8",
+        env: { ...process.env, DOCKER_HOST: `unix://${socket_path}` },
+        timeout: supabase_command_timeout_ms,
+    });
+
+    if (status_result.error !== undefined) {
+        throw status_result.error;
+    }
+    if (status_result.status !== 0) {
+        const safe_output = sanitize_failure_output(
+            `${status_result.stdout}\n${status_result.stderr}`,
+        );
+        throw new Error(`Supabase status failed.\n${safe_output}`);
+    }
+
+    const api_url_match = /^API_URL="([^"]+)"$/mu.exec(status_result.stdout);
+    const publishable_key_match = /^PUBLISHABLE_KEY="([^"]+)"$/mu.exec(status_result.stdout);
+    assert.ok(api_url_match !== null);
+    assert.ok(publishable_key_match !== null);
+    const api_url = api_url_match[1];
+    const publishable_key = publishable_key_match[1];
+    assert.ok(api_url !== undefined);
+    assert.ok(publishable_key !== undefined);
+    assert.equal(api_url, "http://127.0.0.1:54321");
+    assert.ok(publishable_key.startsWith("sb_publishable_"));
+
+    const environment_path = fileURLToPath(new URL("../.env.local", import.meta.url));
+    const environment = [
+        `VITE_SUPABASE_URL=${api_url}`,
+        `VITE_SUPABASE_PUBLISHABLE_KEY=${publishable_key}`,
+        "",
+    ].join("\n");
+    writeFileSync(environment_path, environment, { encoding: "utf8", mode: 0o600 });
 }
 
 const action = process.argv[2];
@@ -155,7 +196,7 @@ try {
     const supabase_result = spawnSync("pnpm", supabase_arguments, {
         encoding: "utf8",
         env: { ...process.env, DOCKER_HOST: `unix://${socket_path}` },
-        timeout: 300_000,
+        timeout: supabase_command_timeout_ms,
     });
 
     if (supabase_result.error !== undefined) {
@@ -167,6 +208,10 @@ try {
             `${supabase_result.stdout}\n${supabase_result.stderr}`,
         );
         throw new Error(`Supabase ${action} failed.\n${safe_output}`);
+    }
+
+    if (action === "start") {
+        write_frontend_environment(socket_path);
     }
 
     if (action === "types") {

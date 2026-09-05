@@ -25,15 +25,16 @@ The test suite will cover valid and invalid transitions, cross-user access, and 
 
 ## Current status
 
-Stage 3, database workflow. The repository contains a tested React/TanStack shell plus the vendor
-request schema, Row Level Security policies, atomic workflow functions, audit history, and fictional
-seed data. Application workflow screens begin in Stage 4. Nothing has been deployed yet.
+Stage 4, application workflow. The repository contains the complete requester, administrator, and
+reviewer flow backed by PostgreSQL authorization, revision checks, and immutable audit history.
+Failure recovery and end-to-end hardening begin in Stage 5. Nothing has been deployed yet.
 
 - [Product brief](./docs/product-brief.md)
 - [Workflow contract](./docs/workflow-contract.md)
 - [Technology decision](./docs/decisions/0001-technology-stack.md)
 - [Local Supabase runtime decision](./docs/decisions/0002-local-supabase-runtime.md)
 - [Database workflow decision](./docs/decisions/0003-database-workflow.md)
+- [Application workflow decision](./docs/decisions/0004-application-workflow.md)
 
 ## Planned stack
 
@@ -60,8 +61,20 @@ Use the repository commands rather than duplicating their internal steps:
 ```bash
 just install
 just database-start
+just database-reset
 just develop
 ```
+
+Use one of the fictional local identities below with the local-only password `VendorFlow2026`:
+
+- `maya.requester@vendorflow.example` — requester.
+- `elliot.requester@vendorflow.example` — second requester for ownership checks.
+- `priya.admin@vendorflow.example` — administrator.
+- `jon.reviewer@vendorflow.example` — reviewer.
+
+The credential is an intentionally public local fixture, not a deployable secret. Global signup is
+disabled, and Stage 5 must replace this shared local access model with isolated visitor identities
+before any public deployment.
 
 The application runs at <http://127.0.0.1:5174>. Stop the local Supabase services when finished:
 
@@ -69,8 +82,9 @@ The application runs at <http://127.0.0.1:5174>. Stop the local Supabase service
 just database-stop
 ```
 
-`just database-start` prepares digest-locked images, starts a temporary Podman API socket, and runs
-only PostgreSQL, Kong, GoTrue, and PostgREST. It deliberately suppresses generated local keys. Use
+`just database-start` prepares digest-locked images, starts a temporary Podman API socket, runs only
+PostgreSQL, Kong, GoTrue, and PostgREST, and writes the publishable local browser configuration to
+ignored `.env.local`. It deliberately suppresses generated keys from command output. Use
 `just database-reset` to rebuild from migrations and fictional seed data; reset intentionally
 deletes local database changes. See the
 [runtime decision](./docs/decisions/0002-local-supabase-runtime.md) for compatibility and integrity
@@ -83,7 +97,7 @@ just check
 ```
 
 Run `just database-start` first. The check runs formatting verification, type-aware linting with
-warnings denied, TypeScript, component tests, database lint, generated-type drift checks, 86
+warnings denied, TypeScript, component tests, database lint, generated-type drift checks, 88
 transactional pgTAP checks, and a production build. Use `just --list` to discover individual
 commands.
 

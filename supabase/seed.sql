@@ -1,73 +1,71 @@
 -- All records are fictional and exist only for local portfolio development.
 insert into auth.users (
-    id, aud, role, email, email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-    created_at, updated_at, is_sso_user, is_anonymous
-) values
-    (
-        '20000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated',
-        'maya.requester@vendorflow.example', statement_timestamp(),
-        '{"provider":"email","providers":["email"]}', '{"full_name":"Maya Chen"}',
-        statement_timestamp(), statement_timestamp(), false, false
+    instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+    confirmation_token, recovery_token, email_change_token_new, email_change,
+    phone_change, phone_change_token, reauthentication_token, raw_app_meta_data,
+    raw_user_meta_data, created_at, updated_at, is_sso_user, is_anonymous
+)
+select
+    '00000000-0000-0000-0000-000000000000', fixture.id, 'authenticated', 'authenticated',
+    fixture.email, '$2a$10$TQ/WXmingWBWR6Md0Cnh8.oUxZgXCz5RoF6v2DQ/ZqEaz8k4X0UOO',
+    statement_timestamp(), '', '', '', '', '', '', '',
+    '{"provider":"email","providers":["email"]}',
+    jsonb_build_object('full_name', fixture.full_name), statement_timestamp(),
+    statement_timestamp(), false, false
+from (
+    values
+        ('20000000-0000-4000-8000-000000000001'::uuid,
+            'maya.requester@vendorflow.example', 'Maya Chen'),
+        ('20000000-0000-4000-8000-000000000002'::uuid,
+            'jon.reviewer@vendorflow.example', 'Jon Bell'),
+        ('20000000-0000-4000-8000-000000000003'::uuid,
+            'priya.admin@vendorflow.example', 'Priya Shah'),
+        ('20000000-0000-4000-8000-000000000004'::uuid,
+            'elliot.requester@vendorflow.example', 'Elliot Stone'),
+        ('20000000-0000-4000-8000-000000000005'::uuid,
+            'nina.external@vendorflow.example', 'Nina Brooks')
+) as fixture(id, email, full_name);
+
+insert into auth.identities (
+    id, provider_id, user_id, identity_data, provider,
+    last_sign_in_at, created_at, updated_at
+)
+select
+    users.id, users.id::text, users.id,
+    jsonb_build_object(
+        'sub', users.id::text, 'email', users.email,
+        'email_verified', true, 'phone_verified', false
     ),
-    (
-        '20000000-0000-4000-8000-000000000002', 'authenticated', 'authenticated',
-        'jon.reviewer@vendorflow.example', statement_timestamp(),
-        '{"provider":"email","providers":["email"]}', '{"full_name":"Jon Bell"}',
-        statement_timestamp(), statement_timestamp(), false, false
-    ),
-    (
-        '20000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated',
-        'priya.admin@vendorflow.example', statement_timestamp(),
-        '{"provider":"email","providers":["email"]}', '{"full_name":"Priya Shah"}',
-        statement_timestamp(), statement_timestamp(), false, false
-    ),
-    (
-        '20000000-0000-4000-8000-000000000004', 'authenticated', 'authenticated',
-        'elliot.requester@vendorflow.example', statement_timestamp(),
-        '{"provider":"email","providers":["email"]}', '{"full_name":"Elliot Stone"}',
-        statement_timestamp(), statement_timestamp(), false, false
-    ),
-    (
-        '20000000-0000-4000-8000-000000000005', 'authenticated', 'authenticated',
-        'nina.external@vendorflow.example', statement_timestamp(),
-        '{"provider":"email","providers":["email"]}', '{"full_name":"Nina Brooks"}',
-        statement_timestamp(), statement_timestamp(), false, false
-    );
+    'email', statement_timestamp(), statement_timestamp(), statement_timestamp()
+from auth.users as users
+where users.email like '%@vendorflow.example';
 
 insert into public.organizations (id, name) values
     ('10000000-0000-4000-8000-000000000001', 'Harborline Operations'),
     ('10000000-0000-4000-8000-000000000002', 'Pinecrest Labs');
 
-insert into public.organization_memberships (organization_id, user_id, role, active) values
+insert into public.organization_memberships (
+    organization_id, user_id, display_name, role, active
+) values
     (
         '10000000-0000-4000-8000-000000000001',
-        '20000000-0000-4000-8000-000000000001',
-        'requester',
-        true
+        '20000000-0000-4000-8000-000000000001', 'Maya Chen', 'requester', true
     ),
     (
         '10000000-0000-4000-8000-000000000001',
-        '20000000-0000-4000-8000-000000000002',
-        'reviewer',
-        true
+        '20000000-0000-4000-8000-000000000002', 'Jon Bell', 'reviewer', true
     ),
     (
         '10000000-0000-4000-8000-000000000001',
-        '20000000-0000-4000-8000-000000000003',
-        'administrator',
-        true
+        '20000000-0000-4000-8000-000000000003', 'Priya Shah', 'administrator', true
     ),
     (
         '10000000-0000-4000-8000-000000000001',
-        '20000000-0000-4000-8000-000000000004',
-        'requester',
-        true
+        '20000000-0000-4000-8000-000000000004', 'Elliot Stone', 'requester', true
     ),
     (
         '10000000-0000-4000-8000-000000000002',
-        '20000000-0000-4000-8000-000000000005',
-        'requester',
-        true
+        '20000000-0000-4000-8000-000000000005', 'Nina Brooks', 'requester', true
     );
 
 insert into public.vendor_requests (

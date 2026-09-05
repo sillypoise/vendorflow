@@ -1,21 +1,28 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { RouterProvider } from "@tanstack/react-router";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
-import { HomePage } from "./app";
 import { router } from "./router";
 
-describe("VendorFlow foundation pages", () => {
-    // Direct rendering checks the core message; router rendering checks unknown-path recovery.
-    it("states the product purpose and current implementation boundary", () => {
-        render(<HomePage />);
+afterEach(cleanup);
+
+describe("VendorFlow application pages", () => {
+    // Router rendering checks both the workflow entry point and unknown-route recovery.
+    it("states the product purpose and opens the implemented workflow", async () => {
+        router.history.push("/");
+        await router.load();
+        render(<RouterProvider router={router} />);
 
         expect(
             screen.getByRole("heading", {
                 name: "Every vendor decision has an owner and a history.",
             }),
         ).toBeVisible();
-        expect(screen.getByText("Foundation in progress")).toBeVisible();
+        expect(screen.getByText("Database-backed workflow available")).toBeVisible();
+        expect(screen.getByRole("link", { name: "Open workflow demo" })).toHaveAttribute(
+            "href",
+            "/requests",
+        );
         expect(screen.getByText(/permission-aware process/u)).toBeVisible();
     });
 

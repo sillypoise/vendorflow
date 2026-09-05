@@ -73,7 +73,8 @@ mixed-version migration review.
 - Audit events cannot be inserted, updated, or deleted by the authenticated application role.
 - Unknown categories and decisions are parsed inside RPCs so callers receive bounded validation
   errors rather than database enum details.
-- Seed records use fictional `.example` identities and contain no passwords or usable credentials.
+- Seed records use fictional `.example` identities and only a documented local fixture password
+  hash; they contain no production credentials.
 
 ## Performance sketch
 
@@ -91,7 +92,7 @@ exceeds the assumption or query plans stop using the declared indexes.
 
 ## Evidence
 
-The pgTAP suite contains 86 checks covering:
+The pgTAP suite contains 88 checks covering:
 
 - Schema and least-privilege grants.
 - Owner, reviewer, administrator, inactive-user, and anonymous behavior.

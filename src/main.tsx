@@ -1,8 +1,16 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 
 import { router } from "./router";
+
+const query_client = new QueryClient({
+    defaultOptions: {
+        mutations: { retry: 0 },
+        queries: { retry: 1, staleTime: 15_000 },
+    },
+});
 // The stylesheet import lets Vite include global styles in the application bundle.
 // oxlint-disable-next-line import/no-unassigned-import
 import "./styles.css";
@@ -19,6 +27,8 @@ if (root_element.childElementCount !== 0) {
 
 createRoot(root_element).render(
     <StrictMode>
-        <RouterProvider router={router} />
+        <QueryClientProvider client={query_client}>
+            <RouterProvider router={router} />
+        </QueryClientProvider>
     </StrictMode>,
 );

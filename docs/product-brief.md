@@ -2,10 +2,10 @@
 
 ## Status
 
-- Stage: Database workflow implemented; application workflow screens are next.
+- Stage: Application workflow implemented; experience hardening is next.
 - Product owner: `@sillypoise`.
 - Document owner: `@sillypoise`.
-- Last reviewed: 2026-09-04.
+- Last reviewed: 2026-09-05.
 
 ## Problem
 
@@ -84,8 +84,8 @@ Every applicable screen must explicitly handle:
 - Unexpected server failure.
 - Recovery through retry, correction, or safe navigation.
 
-The supported viewport boundaries will be defined with the visual design in Stage 4 and tested in
-Stage 5.
+The first release supports a 320 CSS-pixel mobile viewport through a 1,440 CSS-pixel desktop
+viewport. Stage 5 must test both boundaries and representative intermediate widths.
 
 ## Initial request data
 

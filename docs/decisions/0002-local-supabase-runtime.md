@@ -66,7 +66,8 @@ configuration.
 ## Operational behavior
 
 - `just database-images` prepares and verifies locked images.
-- `just database-start` starts a temporary Podman API service and the minimal Supabase stack.
+- `just database-start` starts a temporary Podman API service and the minimal Supabase stack, then
+  writes only publishable browser configuration to ignored `.env.local`.
 - `just database-reset` rebuilds the database from migrations and fictional seed data.
 - `just database-check` runs database lint, transactional pgTAP tests, and generated-type drift
   checks.

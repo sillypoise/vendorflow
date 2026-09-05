@@ -43,31 +43,33 @@ values
     ('10000000-0000-4000-8000-000000000001', 'Workflow Test Organization'),
     ('10000000-0000-4000-8000-000000000002', 'External Test Organization');
 
-insert into public.organization_memberships (organization_id, user_id, role, active)
+insert into public.organization_memberships (
+    organization_id, user_id, display_name, role, active
+)
 values
     (
         '10000000-0000-4000-8000-000000000001',
-        '20000000-0000-4000-8000-000000000001', 'requester', true
+        '20000000-0000-4000-8000-000000000001', 'Requester A', 'requester', true
     ),
     (
         '10000000-0000-4000-8000-000000000001',
-        '20000000-0000-4000-8000-000000000002', 'reviewer', true
+        '20000000-0000-4000-8000-000000000002', 'Reviewer', 'reviewer', true
     ),
     (
         '10000000-0000-4000-8000-000000000001',
-        '20000000-0000-4000-8000-000000000003', 'administrator', true
+        '20000000-0000-4000-8000-000000000003', 'Administrator', 'administrator', true
     ),
     (
         '10000000-0000-4000-8000-000000000001',
-        '20000000-0000-4000-8000-000000000004', 'requester', true
+        '20000000-0000-4000-8000-000000000004', 'Requester B', 'requester', true
     ),
     (
         '10000000-0000-4000-8000-000000000002',
-        '20000000-0000-4000-8000-000000000005', 'requester', true
+        '20000000-0000-4000-8000-000000000005', 'External', 'requester', true
     ),
     (
         '10000000-0000-4000-8000-000000000001',
-        '20000000-0000-4000-8000-000000000006', 'reviewer', false
+        '20000000-0000-4000-8000-000000000006', 'Inactive Reviewer', 'reviewer', false
     );
 
 insert into public.vendor_requests (
@@ -121,7 +123,7 @@ values
         null, null, null, null, null, null, null, null, 'draft', 1
     );
 
-select extensions.plan(86);
+select extensions.plan(88);
 
 -- Schema and grants establish fail-closed boundaries before behavior tests run.
 select extensions.has_table('public', 'organizations', 'organizations table exists');
@@ -129,6 +131,12 @@ select extensions.has_table(
     'public', 'organization_memberships', 'organization memberships table exists'
 );
 select extensions.has_table('public', 'vendor_requests', 'vendor requests table exists');
+select extensions.has_column(
+    'public', 'organization_memberships', 'display_name', 'membership display name exists'
+);
+select extensions.col_not_null(
+    'public', 'organization_memberships', 'display_name', 'membership display name is required'
+);
 select extensions.has_table(
     'public', 'vendor_request_audit_events', 'vendor request audit events table exists'
 );
