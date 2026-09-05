@@ -1,6 +1,6 @@
 # 0006: Hosted Deployment and Protected Infrastructure State
 
-- Status: Partially provisioned; Turnstile write permission blocks bootstrap completion.
+- Status: Bootstrap provisioned and verified; public-release gates remain open.
 - Owner: `@sillypoise`.
 - Date: 2026-09-05.
 
@@ -18,19 +18,25 @@ settings. Existing Cloudflare resources were not imported or modified.
 ## Bootstrap result and containment
 
 Pages `vendorflow-demo` and Supabase `sgmmabbsxxgqgtprfbje` were created. Turnstile creation returned
-HTTP 403 even though widget listing succeeded. The token needs Account → Turnstile → Edit scoped
-to the selected Cloudflare account. Do not retry the denied operation until permissions change.
+HTTP 403 even though widget listing succeeded. After the operator granted Turnstile write
+permission, a fresh plan added only the pending widget and settings. Both were created successfully;
+a subsequent refreshed plan reported no changes.
 
 Because the settings resource depends on Turnstile, it did not run. To contain the partial apply,
 the operator-authorized Management API was used once to PATCH the new project's Auth configuration:
 `disable_signup = true`; anonymous, email, and phone authentication all false. A subsequent GET
 verified all four values. This was an incident-containment step, not an alternative provisioning
-mechanism; the same values are represented in the pending OpenTofu settings resource.
+mechanism; the same values are now managed by the applied OpenTofu settings resource.
 
 The billing add-ons API reported zero selected paid add-ons. The provider returned null for
 `instance_size`, so that field alone is not evidence of the billing tier. No frontend or migrations
-have been deployed. No public demo signup is enabled. Resume with a fresh reviewed plan after the
-Cloudflare permission change; keep the current state rather than recreating the project.
+have been deployed. No public demo signup is enabled.
+
+Management API reads verified closed signup; disabled anonymous, email, and phone authentication;
+enabled Turnstile; `rate_limit_anonymous_users = 5` and `rate_limit_token_refresh = 30`; JWT
+lifetime 3,600 seconds; public-only API schema with a 100-row ceiling; and successfully applied
+database SSL enforcement. These are configuration checks, not proof of browser CAPTCHA delivery or
+hosted workflow behavior. The frontend address is `https://vendorflow-demo.pages.dev` once uploaded.
 
 OpenTofu owns these resources in `infra/main.tf`. It reads provider tokens directly from their
 supported environment variables. The `secret` zsh function supplies credentials locally. Never run
@@ -89,9 +95,11 @@ just infrastructure-plan
 just infrastructure-apply approve-vendorflow-plan
 ```
 
-Fresh-checkout provider initialization and `infrastructure-validate` need no hosted credentials;
-initialization against existing encrypted state requires its passphrase. CI installs pinned OpenTofu
-and runs provider initialization and validation, never plan/apply.
+Provider initialization needs an encryption variable even on a fresh checkout. The first CI run
+failed because it was absent; the earlier local check had inherited the operator environment and
+was not evidence of credential-free initialization. CI now supplies an explicit public,
+validation-only fixture. It never receives hosted state, provider tokens, or the recovery key, and
+never runs plan/apply. Initialization against hosted encrypted state requires its real passphrase.
 
 The saved plan is encrypted and is the only input accepted by the apply recipe. A fresh plan must
 be reviewed after any configuration change. Infrastructure bootstrap is not part of `just check`.

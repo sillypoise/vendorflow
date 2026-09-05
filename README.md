@@ -27,8 +27,9 @@ The test suite covers valid and invalid transitions, cross-user access, and role
 
 Stage 6 is in progress. The hardened local workflow includes isolated visitor workspaces and real
 browser checks. A Pages project and Supabase project have been provisioned, but no frontend has been
-uploaded and hosted signup is disabled. Turnstile creation is blocked on Cloudflare token write
-permission. Cleanup, hosted verification, and public release remain pending.
+uploaded and hosted signup is disabled. Turnstile and Supabase security settings are now applied,
+and the refreshed infrastructure plan shows no drift. Browser CAPTCHA integration, cleanup, hosted
+workflow verification, and public release remain pending.
 
 - [Product brief](./docs/product-brief.md)
 - [Workflow contract](./docs/workflow-contract.md)
@@ -107,6 +108,11 @@ Chromium tests at 320, 768, and 1,440 CSS pixels. Browser tests use production p
 and create isolated, expiring local demo data. Infrastructure formatting and validation also run,
 without a hosted plan or apply. Do not point browser tests at a hosted database.
 Use `just --list` to discover individual commands.
+
+Infrastructure initialization requires an encryption variable. Operators with hosted state load
+`secret` first. For validation on a fresh checkout without hosted state, use
+`TF_VAR_state_passphrase=vendorflow-ci-validation-only-not-for-hosted-state just infrastructure-init`.
+That public fixture is for validation only; never use it for hosted plans or applies.
 
 ## Planned delivery stages
 

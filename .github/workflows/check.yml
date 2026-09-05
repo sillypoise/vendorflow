@@ -18,6 +18,9 @@ jobs:
         name: Application and database checks
         runs-on: ubuntu-24.04
         timeout-minutes: 20
+        env:
+            # Validation-only fixture: CI never receives hosted state or its recovery passphrase.
+            TF_VAR_state_passphrase: vendorflow-ci-validation-only-not-for-hosted-state
         steps:
             - name: Check out repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -52,6 +55,7 @@ jobs:
               run: just install
 
             - name: Start local Supabase
+              id: database_start
               run: just database-start
 
             - name: Install browser
@@ -61,5 +65,5 @@ jobs:
               run: just check
 
             - name: Stop local Supabase
-              if: always()
+              if: always() && (steps.database_start.outcome == 'success' || steps.database_start.outcome == 'failure')
               run: just database-stop
