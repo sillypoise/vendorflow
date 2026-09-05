@@ -247,7 +247,7 @@ in the same change. After version 1 is public:
 
 The contract currently has no deprecated fields or supported legacy versions.
 
-### 2026-09-06 Stage 6 pre-release delta
+### 2026-09-05 Stage 6 pre-release delta
 
 Classification: additive health RPC, private maintenance heartbeat, and database-owned cleanup job.
 Workflow states, fields, revision semantics, and mutation errors are unchanged. Hosted entry now

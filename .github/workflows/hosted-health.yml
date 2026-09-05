@@ -1,0 +1,35 @@
+name: Hosted health
+
+on:
+    workflow_dispatch:
+    schedule:
+        - cron: "7,17,27,37,47,57 * * * *"
+
+permissions:
+    contents: read
+    issues: write
+
+concurrency:
+    group: hosted-health
+    cancel-in-progress: false
+
+jobs:
+    probe:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 3
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              with:
+                  node-version: 24.13.0
+                  package-manager-cache: false
+            - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+              with:
+                  just-version: 1.43.1
+            - name: Probe bounded operational health
+              run: just hosted-health
+            - name: Open or retain an operator alert
+              if: failure()
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: just hosted-health-alert

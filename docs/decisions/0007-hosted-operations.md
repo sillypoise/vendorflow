@@ -2,19 +2,19 @@
 
 - Status: Implementation in progress; public signup remains closed.
 - Owner: `@sillypoise`.
-- Date: 2026-09-06.
+- Date: 2026-09-05.
 - Contract: [Workflow and health boundaries](../workflow-contract.md).
 
 ## Admission decisions
 
 - Reuse Cloudflare's explicit Turnstile API without another React dependency. One script is loaded
   per document with a 15-second deadline. Widget retries and refreshes are manual, callbacks are
-  ignored after disposal/failure, tokens are bounded and single-use, and missing hosted configuration
+  ignored after disposal/failure, tokens are bounded and single-use, and missing configuration
   fails closed. Compact rendering fits the declared 320-pixel layout. Supabase still verifies the
   token server-side; the browser is not the authorization boundary.
 - Reuse Supabase's pg_cron extension and existing bounded cleanup function instead of deploying an
   external worker with a service key. A private singleton heartbeat records successful completion;
-  a public, read-only health bit allows credential-free privileged-access monitoring using only a
+  a public, read-only health bit allows monitoring without privileged credentials, using only a
   publishable API key. The health bit includes missing/stale cleanup, backlog, rate, and storage
   thresholds. It is not a public diagnostics or cleanup endpoint.
 - Admit a narrow HTTPS migration runner because both direct PostgreSQL paths were tested and failed:
@@ -25,9 +25,10 @@
 
 `hosted-database-plan` reads Supabase's native migration-history endpoint and prints pending local
 filenames. `hosted-database-apply` requires explicit approval and committed, unmodified migration
-files. Each migration uses the Management API database-query endpoint in one transaction, with a
+files. SQL is read from the captured Git commit, not a mutable working-tree file. Each migration
+uses the Management API database-query endpoint in one transaction, with a
 30-second statement timeout and a transaction-scoped advisory lock. SQL and its original version,
-name, and source are recorded together in `supabase_migrations.schema_migrations`. An already applied
+name, and source are recorded in `supabase_migrations.schema_migrations`. An already applied
 version aborts before schema mutation. After an ambiguous response, inspect the next plan before
 retrying; do not automatically retry writes.
 
@@ -37,7 +38,7 @@ non-prefix history fail closed. No local seed identities are deployed. Existing 
 immutable and must be reviewed together with contract deltas. Native CLI deployment can be
 re-evaluated when a supported database network path exists.
 
-An exploratory `supabase link` also populated local version caches; a subsequent local reset stalled.
+An exploratory `supabase link` populated local version caches; a subsequent local reset stalled.
 Clearing that generated link cache and rebuilding disposable local services restored validation.
 The HTTPS runner does not link the workspace or share hosted caches with local Podman operations.
 
@@ -55,11 +56,46 @@ presentation; inline scripts and eval are not. Header lines exceed the code form
 Cloudflare's header artifact requires each policy on one line. Provider scripts are an explicit
 third-party trust dependency, not vendored or integrity-pinned assets.
 
+## Observed hosted database evidence
+
+All four repository migrations were applied successfully through HTTPS; the subsequent plan had no
+pending versions. A hosted heartbeat was observed with `demo_health() = true`, zero identities, and
+zero requests before verification fixtures were introduced. Fixtures in
+`supabase/verification/hosted_workflow.sql` then passed real authenticated-grant/RLS checks for two
+visitors, cross-workspace denial, role denial, approval, stale revisions, audit preservation, and
+reset isolation. Their transaction rolled back. Unsigned HTTP request reads, `start_demo`, and
+cleanup calls each returned 401; signup without verification returned `captcha_failed`. Missing
+operator credentials and an incorrect migration approval also failed closed. This does not prove
+successful browser/Auth integration.
+
+`just hosted-cleanup-benchmark approve-vendorflow-benchmark` ran the SQL workload in
+`supabase/benchmarks/demo_cleanup.sql`: 100 requests, 10,000 audit rows, and 39,600,000 bytes of
+maximum-length four-byte reasons. One measured hosted cleanup took **116.22 ms**, deleted one
+identity, and produced an approximately **2,560,040-byte** cluster WAL delta. A preliminary run
+completed but its numeric-result parser rejected PostgreSQL numeric strings; the corrected run
+provided the recorded timing. All fixture data rolled back, but disk/WAL work was real.
+
+Confidence: high for that single measurement, low for extrapolation under concurrency. This is a
+maximum-row/reason workload, not a worst-case latency guarantee; it does not model refresh-token
+history, concurrent callers, repeated churn, cold storage, or other workloads. The scheduled
+20-second timeout is an enforced bound, not a demonstrated performance target.
+
+The static uploader uses integrity-locked Wrangler as a development dependency. Its Worker/esbuild
+installation hooks are explicitly ignored because this project uploads static files only; revisit
+that decision before introducing Pages Functions. Builds receive a minimal environment containing
+only public Vite configuration, while upload subprocesses receive only their Cloudflare credential.
+
+The scheduled health probe checks a deep frontend route, framing policy, and the database health
+bit every ten minutes. Failure opens or retains one bot-owned operator issue. Schedule latency is
+not guaranteed; the owner must review workflow activity weekly, re-enable inactive schedules, and
+investigate open alerts rather than treating silence as success. Alert delivery still needs a real
+workflow exercise before release.
+
 ## Remaining evidence and rollout
 
 Local tests cover token bounds, expiry, disposal, provider error redaction, signup token forwarding,
 missing configuration, scheduler denial, heartbeat expiry, inactive jobs, and rate alert boundaries.
-Hosted migrations, actual scheduler heartbeats, monitoring delivery, maximum-size cleanup behavior,
-CAPTCHA delivery/rejection, and HTTPS browser workflow checks still require recorded evidence before
+Monitoring delivery, CAPTCHA delivery/rejection, and HTTPS browser workflow checks still require
+recorded evidence before
 public signup can be enabled. A public frontend with signup closed is only a release candidate, not
 a shipped portfolio demo.

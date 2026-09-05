@@ -1,0 +1,5 @@
+# Static Pages uploads do not execute the Worker runtime or esbuild installation hooks.
+# Re-evaluate before introducing Pages Functions or local Worker execution.
+ignoredBuiltDependencies:
+    - esbuild
+    - workerd

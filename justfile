@@ -114,6 +114,49 @@ infrastructure-apply approval:
     test {{ quote(approval) }} = approve-vendorflow-plan
     umask 077; tofu -chdir=infra apply -input=false -lock-timeout=30s release.tfplan
 
+# Review pending hosted migrations without applying them or loading local seed identities.
+hosted-database-plan:
+    node scripts/hosted_release.ts database-plan
+
+# Apply the reviewed committed migrations to the project-owned hosted database.
+hosted-database-apply approval:
+    test {{ quote(approval) }} = approve-vendorflow-migrations
+    node scripts/hosted_release.ts database-apply
+
+# Verify the hosted workflow using transactional fictional fixtures and real database roles.
+hosted-database-check:
+    node scripts/hosted_release.ts database-check
+
+# Build with the hosted project's publishable configuration; no credentials enter the bundle.
+hosted-build:
+    node scripts/hosted_release.ts build
+
+# Verify selected hosted Auth controls without displaying provider secrets.
+hosted-status:
+    node scripts/hosted_release.ts status
+
+# Upload a committed, validated release candidate; this does not enable hosted signup.
+deploy approval:
+    test {{ quote(approval) }} = approve-vendorflow-upload
+    node scripts/hosted_release.ts deploy
+
+# Intentionally benchmark maximum audit-row cleanup; fixtures roll back but WAL/disk work is real.
+hosted-cleanup-benchmark approval:
+    test {{ quote(approval) }} = approve-vendorflow-benchmark
+    node scripts/hosted_release.ts benchmark
+
+# Verify unsigned API and unverified signup denial using only the publishable key.
+hosted-access-check:
+    node scripts/hosted_access.ts
+
+# Probe hosted frontend and bounded database health using only the publishable API key.
+hosted-health:
+    node scripts/hosted_health.ts
+
+# Create one durable operator alert for failed scheduled probes (GitHub Actions only).
+hosted-health-alert:
+    node scripts/hosted_health_alert.ts
+
 # Print the active project tool versions.
 runtime:
     @echo "Node.js $(node --version)"

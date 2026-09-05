@@ -28,8 +28,9 @@ The test suite covers valid and invalid transitions, cross-user access, and role
 Stage 6 is in progress. The hardened local workflow includes isolated visitor workspaces and real
 browser checks. A Pages project and Supabase project have been provisioned, but no frontend has been
 uploaded and hosted signup is disabled. Turnstile and Supabase security settings are now applied,
-and the refreshed infrastructure plan shows no drift. Browser CAPTCHA integration, cleanup, hosted
-workflow verification, and public release remain pending.
+and the refreshed infrastructure plan shows no drift. CAPTCHA integration, hosted migrations,
+scheduled cleanup, and transactional hosted workflow checks are implemented. The frontend upload,
+external monitoring verification, and real-browser release checks remain pending.
 
 - [Product brief](./docs/product-brief.md)
 - [Workflow contract](./docs/workflow-contract.md)
@@ -40,6 +41,7 @@ workflow verification, and public release remain pending.
 - [Isolated demo decision](./docs/decisions/0005-isolated-demo.md)
 - [Stage 5 validation evidence and limitations](./docs/stage-5-validation.md)
 - [Hosted deployment and bootstrap status](./docs/decisions/0006-hosted-deployment.md)
+- [Hosted operations and migration transport](./docs/decisions/0007-hosted-operations.md)
 
 ## Planned stack
 
@@ -102,8 +104,8 @@ just check
 ```
 
 Run `just database-start`, `just browser-install`, and `just infrastructure-init` first. The check runs formatting verification,
-type-aware linting with warnings denied, TypeScript, 23 unit/component checks, public/private database
-lint, generated-type drift checks, 146 transactional pgTAP checks, a production build, and 21 real
+type-aware linting with warnings denied, TypeScript, 38 unit/component checks, public/private database
+lint, generated-type drift checks, 159 transactional pgTAP checks, a production build, and 21 real
 Chromium tests at 320, 768, and 1,440 CSS pixels. Browser tests use production preview on port 4174
 and create isolated, expiring local demo data. Infrastructure formatting and validation also run,
 without a hosted plan or apply. Do not point browser tests at a hosted database.
@@ -113,6 +115,28 @@ Infrastructure initialization requires an encryption variable. Operators with ho
 `secret` first. For validation on a fresh checkout without hosted state, use
 `TF_VAR_state_passphrase=vendorflow-ci-validation-only-not-for-hosted-state just infrastructure-init`.
 That public fixture is for validation only; never use it for hosted plans or applies.
+
+## Hosted operations
+
+Load `secret` in zsh before privileged operations. Provider tokens and the state recovery passphrase
+must not be printed, committed, or supplied as command arguments.
+
+```text
+just hosted-database-plan
+just hosted-database-apply approve-vendorflow-migrations
+just hosted-database-check
+just hosted-build
+# Commit and validate before publishing a release candidate.
+just deploy approve-vendorflow-upload
+just hosted-health
+```
+
+Hosted migrations use Supabase's HTTPS Management API because this environment cannot reach the
+pooler and lacks direct IPv6. Original versions and migration history are preserved; local seed
+identities are never uploaded. `deployment/public.json` contains only intentionally public browser
+and probe configuration. The health workflow uses no privileged Supabase credentials and opens one
+bot-owned GitHub issue on failure. Review scheduler activity weekly: GitHub schedules can be delayed
+or disabled after inactivity. Uploading the frontend does not enable hosted signup.
 
 ## Planned delivery stages
 

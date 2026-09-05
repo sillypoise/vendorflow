@@ -2,7 +2,7 @@
     "compilerOptions": {
         "target": "ES2022",
         "useDefineForClassFields": true,
-        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "lib": ["ES2023", "DOM", "DOM.Iterable"],
         "module": "ESNext",
         "moduleResolution": "Bundler",
         "moduleDetection": "force",
@@ -10,6 +10,7 @@
         "verbatimModuleSyntax": true,
         "isolatedModules": true,
         "noEmit": true,
+        "allowImportingTsExtensions": true,
         "jsx": "react-jsx",
         "strict": true,
         "noFallthroughCasesInSwitch": true,
