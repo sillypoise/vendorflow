@@ -181,7 +181,7 @@ Owner: `@sillypoise`. Version: `v1-draft`. Demo capabilities are issued only to 
 anonymous identities and never to a supplied user or organization identifier.
 
 - `start_demo()` accepts no arguments. It atomically creates one organization, active requester
-  membership, seeded request, lifecycle event, and private demo-control event. It returns the fixed
+  membership, six sample requests, eighteen lifecycle events, and one private demo-control event. It returns the fixed
   expiry timestamp. Repeated calls return the same timestamp; they never extend the 24-hour lifetime.
 - `demo_control(p_action text)` accepts exactly `requester`, `administrator`, `reviewer`, or `reset`
   and returns no value. It re-authorizes the caller against their unexpired server-issued session
@@ -189,7 +189,7 @@ anonymous identities and never to a supplied user or organization identifier.
 - A demo administrator may nominate only their own identity as the future reviewer persona. They
   must switch to reviewer before deciding. Ordinary organizations retain reviewer-role eligibility.
 - Reset deletes only the caller's organization's requests and lifecycle history, restores requester
-  role, and seeds a fresh draft. This is an explicit demo-only exception to lifecycle immutability;
+  role, and restores the six-scenario sample set. This is an explicit demo-only exception to lifecycle immutability;
   private control events survive reset. Normal workflow functions cannot alter existing events.
 - Each session permits at most 100 live requests, request revision 100, and 200 successful role/reset
   controls. Reset does not extend expiry or restore the control allowance. Workflow and control
@@ -217,6 +217,24 @@ these bounds require a separate read-contract review before the application supp
 Transport errors do not prove whether an atomic write committed. Browser calls time out after 15
 seconds, never automatically retry mutations, and instruct users to check current state before
 retrying. Creation is not idempotent across an ambiguous transport failure.
+
+### Sample dataset rollout
+
+Owner: `@sillypoise`. This is a pre-release behavioral change to initial/reset content, not an API
+signature or workflow-state change. Each new/reset workspace contains one request in each of the
+six states, with fictional vendors and `.example` websites. Its initial history is generated now
+through normal workflow RPCs using simulated personas; it is not backdated activity. The private
+seeder cannot be invoked by visitors. Internal seed personas do not consume the visitor's control
+allowance; the containing creation/reset is recorded in the private control log.
+
+Existing workspaces and their data remain unchanged until their owner explicitly resets them.
+Failed seeding rolls back the entire creation/reset, including roles, deletions, and control counts.
+Reset retains the original expiry. The six samples count toward the existing 100-request cap.
+Old browser builds remain compatible with the paged list and existing request/revision contracts.
+
+Initial work grows from one request/event to six requests/eighteen events, while provisioning still
+uses one browser RPC and the first page remains bounded at 20 rows. No extra browser round trips,
+shared login, persistent cross-visitor fixture, or generic seeding engine is introduced.
 
 ## Operational health boundary
 

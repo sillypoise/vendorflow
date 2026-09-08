@@ -16,10 +16,10 @@ select set_config('request.jwt.claim.sub',
     (select id::text from hosted_actors where visitor = 1), true);
 set local role authenticated;
 select public.start_demo();
-update hosted_actors set request_id = (select id from public.vendor_requests limit 1)
+update hosted_actors set request_id = (select id from public.vendor_requests where state = 'draft')
 where visitor = 1;
 do $check$ begin
-    assert (select count(*) from public.vendor_requests) = 1;
+    assert (select count(*) from public.vendor_requests) = 6;
     assert (select count(*) from public.organizations) = 1;
     assert has_function_privilege('authenticated',
         'public.cleanup_expired_demos()', 'execute') = false;
@@ -33,7 +33,7 @@ set local role authenticated;
 select public.start_demo();
 select public.demo_control('administrator');
 do $check$ begin
-    assert (select count(*) from public.vendor_requests) = 1;
+    assert (select count(*) from public.vendor_requests) = 6;
     assert (select count(*) from public.vendor_requests where id =
         (select request_id from hosted_actors where visitor = 1)) = 0;
     begin
@@ -65,10 +65,13 @@ end; $check$;
 select public.demo_control('reviewer');
 select public.review_vendor_request(
     (select request_id from hosted_actors where visitor = 1), 3, 'approve');
-do $check$ begin
-    assert (select state from public.vendor_requests) = 'approved';
-    assert (select revision from public.vendor_requests) = 4;
-    assert (select count(*) from public.vendor_request_audit_events) = 4;
+do $check$
+declare v_request_id uuid := (select request_id from hosted_actors where visitor = 1);
+begin
+    assert (select state from public.vendor_requests where id = v_request_id) = 'approved';
+    assert (select revision from public.vendor_requests where id = v_request_id) = 4;
+    assert (select count(*) from public.vendor_request_audit_events
+        where request_id = v_request_id) = 4;
     begin
         perform public.review_vendor_request(
             (select request_id from hosted_actors where visitor = 1), 3, 'reject', 'stale fixture');
@@ -76,7 +79,8 @@ do $check$ begin
     exception when sqlstate 'P0001' then
         if sqlerrm <> 'STALE_REVISION' then raise; end if;
     end;
-    assert (select count(*) from public.vendor_request_audit_events) = 4;
+    assert (select count(*) from public.vendor_request_audit_events
+        where request_id = v_request_id) = 4;
 end; $check$;
 select public.demo_control('reset');
 reset role;
@@ -84,8 +88,8 @@ select set_config('request.jwt.claim.sub',
     (select id::text from hosted_actors where visitor = 2), true);
 set local role authenticated;
 do $check$ begin
-    assert (select count(*) from public.vendor_requests) = 1;
-    assert (select count(*) from public.vendor_request_audit_events) = 1;
+    assert (select count(*) from public.vendor_requests) = 6;
+    assert (select count(*) from public.vendor_request_audit_events) = 18;
 end; $check$;
 reset role;
 select 'passed' as hosted_workflow;

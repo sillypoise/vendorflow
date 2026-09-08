@@ -1,6 +1,6 @@
 # 0007: CAPTCHA, Database Maintenance, and HTTPS Migrations
 
-- Status: Operator-authorized signup cutover; final live workflow verification pending.
+- Status: Hosted workflow and cross-browser isolation confirmed by the operator.
 - Owner: `@sillypoise`.
 - Date: 2026-09-05.
 - Contract: [Workflow and health boundaries](../workflow-contract.md).
@@ -110,7 +110,9 @@ The operator subsequently confirmed that verification completes in a normal brow
 `Start private demo`. The operator then submitted with verification and observed HTTP 422 with
 `code: anonymous_provider_disabled`, rather than the `captcha_failed` response observed without a
 token. Confidence is high that the verified request passed the CAPTCHA check and reached the
-closed anonymous-provider gate; successful session creation still requires live verification.
+closed anonymous-provider gate. After the cutover, the operator confirmed successful workspace
+creation, submission, assignment, approval, and cross-browser data isolation. These are reported
+normal-browser observations, separate from the automated database evidence below.
 
 The operator explicitly authorized the next controlled cutover. The reviewed encrypted OpenTofu
 plan changes only `disable_signup` to false and `external_anonymous_users_enabled` to true on the
@@ -125,9 +127,8 @@ still returned 401, and a missing CAPTCHA token still returned `captcha_failed`.
 infrastructure plan reported no changes. The encrypted local state was retained; its independent
 operator-owned backup remains the operator's responsibility after this apply.
 
-This cutover permits the final real Auth/browser check; it is not a declaration that all portfolio
-release gates are complete. Owner: `@sillypoise`. Verify private workspace creation, submission,
-assignment, approval, and a second browser's isolation before publishing the portfolio entry.
+The reported live workflow check is complete; screenshots, a final walkthrough, and remaining
+measurement evidence are separate portfolio tasks. Owner: `@sillypoise`.
 If verification fails, restore the two prior Auth values through a fresh reviewed OpenTofu plan.
 Do not reset the database or rotate unrelated credentials as a rollback. Never share request bodies,
 CAPTCHA tokens, or browser-storage exports. Do not substitute test keys or forge tokens.

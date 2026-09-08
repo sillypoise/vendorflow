@@ -1,151 +1,73 @@
 # VendorFlow
 
-VendorFlow is an independent product concept for vendor intake and approval. It demonstrates how a
-spreadsheet-driven internal process can become a permission-aware workflow with explicit decisions
-and an inspectable audit history.
+**Vendor intake and approval, without the spreadsheet-and-email handoffs.**
 
-> This repository is portfolio work, not client work or a production deployment. Organizations,
-> vendors, users, and activity shown in the eventual demo will be fictional.
+[Try the demo](https://vendorflow-demo.pages.dev) · [Demo walkthrough](docs/demo.md)
 
-## Capability proof
+## The problem
 
-The first release will prove one complete flow:
+Vendor requests often arrive with incomplete details, unclear ownership, and decisions buried in
+email. A spreadsheet can track a status, but it cannot reliably enforce who may change it or explain
+how a request reached that state.
 
-```text
-requester creates a vendor request
-→ input is validated
-→ an administrator assigns a reviewer
-→ the reviewer approves, rejects, or requests changes
-→ every state change is authorization-checked and audited
-→ the requester sees the result and can recover from requested changes
-```
+## The solution
 
-Authorization is enforced in PostgreSQL rather than only through hidden interface controls.
-The test suite covers valid and invalid transitions, cross-user access, and role denial.
+VendorFlow brings the request, review, and decision into one workflow:
 
-## Current status
+1. **Requesters** describe the vendor, annual spend, business need, and data/operational risk.
+2. **Administrators** assign submitted requests to a reviewer.
+3. **Reviewers** approve, reject, or request changes with a reason.
+4. **Everyone involved** can inspect the request's decision history.
 
-Stage 6 is in progress. The hardened local workflow includes isolated visitor workspaces and real
-browser checks. The release candidate is available at https://vendorflow-demo.pages.dev.
-CAPTCHA integration, hosted migrations, scheduled cleanup, transactional hosted workflow checks,
-and external health alerts are implemented and checked. Following operator-confirmed CAPTCHA
-verification, anonymous signup is enabled for the controlled live workflow check. Email/phone
-sign-in remains disabled. Final browser/Auth workflow and portfolio release evidence remain pending.
+Incomplete drafts can be saved. Stale edits cannot silently overwrite newer changes. Authorization,
+revision checks, state changes, and audit entries are enforced together in PostgreSQL—not just by
+hiding buttons in the browser.
 
-- [Product brief](./docs/product-brief.md)
-- [Workflow contract](./docs/workflow-contract.md)
-- [Technology decision](./docs/decisions/0001-technology-stack.md)
-- [Local Supabase runtime decision](./docs/decisions/0002-local-supabase-runtime.md)
-- [Database workflow decision](./docs/decisions/0003-database-workflow.md)
-- [Application workflow decision](./docs/decisions/0004-application-workflow.md)
-- [Isolated demo decision](./docs/decisions/0005-isolated-demo.md)
-- [Stage 5 validation evidence and limitations](./docs/stage-5-validation.md)
-- [Hosted deployment and bootstrap status](./docs/decisions/0006-hosted-deployment.md)
-- [Hosted operations and migration transport](./docs/decisions/0007-hosted-operations.md)
+## Explore the demo
 
-## Planned stack
+Open the demo, complete verification, and select **Start private demo**. No email or password is
+required. Each visitor gets an isolated workspace with six fictional vendor scenarios, from draft
+to approved and rejected. Use **Demo role** to explore each part of the process.
 
-- React and TypeScript with Vite.
-- TanStack Router, Query, and Form.
-- Supabase Auth and PostgreSQL with Row Level Security.
-- PostgreSQL functions for authorized, atomic workflow transitions.
-- Vitest, React Testing Library, Playwright, and database authorization tests.
-- Cloudflare Pages for the frontend, subject to an infrastructure validation spike.
-- OpenTofu for supported project-owned infrastructure and Podman for local containers.
+Already have a workspace? **Reset my demo** loads the current sample dataset, but deletes your
+workspace's existing requests and history. It does not affect other visitors or extend expiry.
 
-## Local development
+The same browser session reuses its workspace; a separate browser/profile gets another one.
+Workspaces expire after 24 hours. This is an independent product concept with fictional data and
+simulated personas—not client work or evidence of independent-human separation of duties.
 
-### Requirements
+See the [sample data and walkthrough](docs/demo.md) for a repeatable demonstration.
 
-- Linux on amd64 for the current local Supabase image lock.
-- Node.js 22.23.2 through 24.x.
-- pnpm 10.33.2.
-- just 1.43 or newer.
-- Rootless Podman 5.7 or newer.
-- OpenTofu 1.11.x (CI pins 1.11.5).
+## Under the hood
 
-Use the repository commands rather than duplicating their internal steps:
+- **React + TypeScript**, with TanStack Router, Query, and Form.
+- **Supabase Auth + PostgreSQL**, with resource-scoped RLS and atomic workflow functions.
+- **Cloudflare Pages + Turnstile**, with OpenTofu-managed infrastructure.
+- **Vitest, pgTAP, and Playwright/axe** for application, database, and browser checks.
 
-```bash
+Visitor data is isolated by authenticated identity. Cleanup runs in the database; operational health
+is monitored without exposing privileged credentials. Role switching is a bounded demo capability,
+not a general permission-management feature.
+
+## Run locally
+
+Requires Node.js 22.23.2–24.x, pnpm 10.33.2, just, and rootless Podman on Linux/amd64.
+
+```sh
 just install
 just database-start
-just database-reset
 just develop
 ```
 
-Open the workflow and choose **Start private demo**. Supabase creates an anonymous identity and
-PostgreSQL provisions a private organization with one fictional draft. Use **Demo role** to try
-requester, administrator, and reviewer actions in that workspace. **Reset my demo** deletes only
-that workspace's requests and history after confirmation; **End session** clears browser access.
-Workspaces expire after 24 hours. Ending a session does not immediately delete its server data.
+Open <http://127.0.0.1:5174>. See [development and deployment](docs/development.md) for validation,
+intentional database resets, infrastructure prerequisites, and hosted commands.
 
-Shared password login has been removed. Named seed identities remain database-test fixtures, not
-login accounts. A visitor plays three personas using one private identity; this demonstrates role
-checks, not independent-human separation of duties. Use separate browser contexts to test isolation.
+## Further reading
 
-The application runs at <http://127.0.0.1:5174>. Stop the local Supabase services when finished:
+- [Workflow and authorization contract](docs/workflow-contract.md)
+- [Product scope](docs/product-brief.md)
+- [Hosted operations and evidence](docs/decisions/0007-hosted-operations.md)
 
-```bash
-just database-stop
-```
-
-`just database-start` prepares digest-locked images, starts a temporary Podman API socket, runs only
-PostgreSQL, Kong, GoTrue, and PostgREST, and writes the publishable local browser configuration to
-ignored `.env.local`. It deliberately suppresses generated keys from command output. Use
-`just database-reset` to rebuild from migrations and fictional seed data; reset intentionally
-deletes local database changes. See the
-[runtime decision](./docs/decisions/0002-local-supabase-runtime.md) for compatibility and integrity
-details.
-
-## Validation
-
-```bash
-just check
-```
-
-Run `just database-start`, `just browser-install`, and `just infrastructure-init` first. The check runs formatting verification,
-type-aware linting with warnings denied, TypeScript, 41 unit/component checks, public/private database
-lint, generated-type drift checks, 159 transactional pgTAP checks, a production build, and 21 real
-Chromium tests at 320, 768, and 1,440 CSS pixels. Browser tests use production preview on port 4174
-and create isolated, expiring local demo data. Infrastructure formatting and validation also run,
-without a hosted plan or apply. Do not point browser tests at a hosted database.
-Use `just --list` to discover individual commands.
-
-Infrastructure initialization requires an encryption variable. Operators with hosted state load
-`secret` first. For validation on a fresh checkout without hosted state, use
-`TF_VAR_state_passphrase=vendorflow-ci-validation-only-not-for-hosted-state just infrastructure-init`.
-That public fixture is for validation only; never use it for hosted plans or applies.
-
-## Hosted operations
-
-Load `secret` in zsh before privileged operations. Provider tokens and the state recovery passphrase
-must not be printed, committed, or supplied as command arguments.
-
-```text
-just hosted-database-plan
-just hosted-database-apply approve-vendorflow-migrations
-just hosted-database-check
-just hosted-build
-# Commit and validate before publishing a release candidate.
-just deploy approve-vendorflow-upload
-just hosted-health
-```
-
-Hosted migrations use Supabase's HTTPS Management API because this environment cannot reach the
-pooler and lacks direct IPv6. Original versions and migration history are preserved; local seed
-identities are never uploaded. `deployment/public.json` contains only intentionally public browser
-and probe configuration. The health workflow uses no privileged Supabase credentials and opens one
-bot-owned GitHub issue on failure. Review scheduler activity weekly: GitHub schedules can be delayed
-or disabled after inactivity. Uploading the frontend does not enable hosted signup.
-
-## Planned delivery stages
-
-1. Define the product, workflow contract, and architectural boundaries.
-2. Establish the application, command, validation, and local database foundations.
-3. Implement the database model, authorization policies, transitions, and database tests.
-4. Build the complete requester and reviewer flow.
-5. Add failure recovery, responsive polish, accessibility checks, and end-to-end tests.
-6. Provision infrastructure, deploy the public demo, and capture portfolio evidence.
-
-Stages 1–5 are implemented. Stage 6 bootstrap has started; hosted security and operational gates
-must pass before the public demo is released.
+The operator has verified the hosted approval flow and cross-browser data isolation. Automated
+checks cover invalid transitions, stale revisions, failure recovery, and access denial. Screenshots
+and the final portfolio walkthrough remain to be captured; no production-scale claim is implied.

@@ -26,8 +26,10 @@ begin
         perform public.start_demo();
         select organization_id into v_organization from private.demo_sessions
         where user_id = v_actor;
+        delete from public.vendor_request_audit_events where organization_id = v_organization;
+        delete from public.vendor_requests where organization_id = v_organization;
         perform public.create_vendor_request(row(null, null, null, null, null, null, null, null))
-        from generate_series(1, 99);
+        from generate_series(1, 100);
         insert into public.vendor_request_audit_events (
             request_id, organization_id, actor_user_id, actor_role, action,
             previous_state, current_state, reason, resulting_revision

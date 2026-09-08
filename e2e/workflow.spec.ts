@@ -113,8 +113,13 @@ test("two visitors stay isolated through role switches and reset", async ({ page
 
 test("draft validation, empty state, service failure and retry", async ({ page }) => {
     await enter_demo(page);
+    // Empty responses remain a supported recovery state even with a populated starter workspace.
+    await page.route("**/rest/v1/vendor_requests?*", (route) =>
+        route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
+    );
     await page.getByRole("combobox", { name: "Status", exact: true }).selectOption("rejected");
     await expect(page.getByRole("heading", { name: "No requests match this view." })).toBeVisible();
+    await page.unroute("**/rest/v1/vendor_requests?*");
     await page.getByRole("link", { name: "New request" }).click();
     await page.getByLabel("Business justification").fill("too short");
     await page.getByLabel("Vendor legal name").click();

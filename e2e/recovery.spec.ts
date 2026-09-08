@@ -49,7 +49,7 @@ test("failed session creation and failed list reads recover without leaking erro
     await page.unroute("**/rest/v1/vendor_requests?*");
     await page.getByRole("button", { name: "Retry", exact: true }).click();
     await page.getByRole("combobox", { name: "Status", exact: true }).selectOption("submitted");
-    await expect(page.getByRole("heading", { name: "No requests match this view." })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Harbor Freight Partners/u })).toBeVisible();
 });
 
 test("unsaved navigation, denied edit route, and session cache separation", async ({ page }) => {

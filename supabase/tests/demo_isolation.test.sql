@@ -14,7 +14,7 @@ select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000001
 set local role authenticated;
 select extensions.lives_ok('select public.start_demo()', 'visitor A can provision their own workspace');
 select extensions.lives_ok('select public.start_demo()', 'repeat provisioning is idempotent');
-select extensions.is((select count(*) from public.vendor_requests), 1::bigint, 'one seeded draft');
+select extensions.is((select count(*) from public.vendor_requests), 6::bigint, 'six seeded scenarios');
 select extensions.is((select count(*) from public.organizations), 1::bigint, 'one private organization');
 select extensions.throws_ok('select public.demo_control(null)', 'P0001', 'VALIDATION_FAILED',
     'null role fails closed');
@@ -26,14 +26,14 @@ select extensions.throws_ok('select * from private.demo_sessions', '42501',
     'permission denied for schema private', 'session capabilities are not exposed');
 reset role;
 insert into demo_snapshot select 1, organization_id, id from public.vendor_requests
-where owner_user_id = '90000000-0000-4000-8000-000000000001';
+where owner_user_id = '90000000-0000-4000-8000-000000000001' and state = 'draft';
 
 select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000002', true);
 set local role authenticated;
 select extensions.lives_ok('select public.start_demo()', 'visitor B gets an independent workspace');
-select extensions.is((select count(*) from public.vendor_requests), 1::bigint,
+select extensions.is((select count(*) from public.vendor_requests), 6::bigint,
     'B cannot read A requests');
-select extensions.is((select count(*) from public.vendor_request_audit_events), 1::bigint,
+select extensions.is((select count(*) from public.vendor_request_audit_events), 18::bigint,
     'B cannot read A history');
 select extensions.throws_ok($test$select public.submit_vendor_request(
     (select request_id from demo_snapshot where visitor = 1), 1)$test$,
@@ -52,10 +52,10 @@ select extensions.is((select role from public.organization_memberships where use
     '90000000-0000-4000-8000-000000000001'), 'requester'::public.membership_role,
     'B role switch never changes A role');
 insert into demo_snapshot select 2, organization_id, id from public.vendor_requests
-where owner_user_id = '90000000-0000-4000-8000-000000000002';
+where owner_user_id = '90000000-0000-4000-8000-000000000002' and state = 'draft';
 insert into public.vendor_requests(organization_id, owner_user_id)
 select organization_id, '90000000-0000-4000-8000-000000000002'::uuid
-from demo_snapshot cross join generate_series(1, 98) where visitor = 2;
+from demo_snapshot cross join generate_series(1, 93) where visitor = 2;
 update public.vendor_requests set revision = 99
 where id = (select request_id from demo_snapshot where visitor = 2);
 set local role authenticated;
@@ -99,15 +99,17 @@ select extensions.lives_ok('select public.demo_control(''reviewer'')', 'switch t
 select extensions.lives_ok($test$select public.review_vendor_request(
     (select request_id from demo_snapshot where visitor = 1), 3, 'approve')$test$,
     'assigned demo reviewer approves');
-select extensions.is((select count(*) from public.vendor_request_audit_events), 4::bigint,
+select extensions.is((select count(*) from public.vendor_request_audit_events where request_id =
+    (select request_id from demo_snapshot where visitor = 1)), 4::bigint,
     'full demo flow has four immutable lifecycle events');
 select extensions.throws_ok($test$select public.review_vendor_request(
     (select request_id from demo_snapshot where visitor = 1), 3, 'reject', 'stale')$test$,
     'P0001', 'STALE_REVISION', 'stale decision cannot overwrite approval');
-select extensions.is((select count(*) from public.vendor_request_audit_events), 4::bigint,
+select extensions.is((select count(*) from public.vendor_request_audit_events where request_id =
+    (select request_id from demo_snapshot where visitor = 1)), 4::bigint,
     'denied decision adds no audit event');
 select extensions.lives_ok('select public.demo_control(''reset'')', 'explicit reset starts fresh');
-select extensions.is((select count(*) from public.vendor_requests), 1::bigint, 'reset seeds one draft');
+select extensions.is((select count(*) from public.vendor_requests), 6::bigint, 'reset restores six scenarios');
 select extensions.is((select count(*) from public.vendor_requests where id =
     (select request_id from demo_snapshot where visitor = 1)), 0::bigint, 'old identifier cannot be reused');
 reset role;
