@@ -26,11 +26,11 @@ The test suite covers valid and invalid transitions, cross-user access, and role
 ## Current status
 
 Stage 6 is in progress. The hardened local workflow includes isolated visitor workspaces and real
-browser checks. A Pages project and Supabase project have been provisioned, but no frontend has been
-uploaded and hosted signup is disabled. Turnstile and Supabase security settings are now applied,
-and the refreshed infrastructure plan shows no drift. CAPTCHA integration, hosted migrations,
-scheduled cleanup, and transactional hosted workflow checks are implemented. The frontend upload,
-external monitoring verification, and real-browser release checks remain pending.
+browser checks. A closed-signup release candidate is available at
+https://vendorflow-demo.pages.dev. CAPTCHA integration, hosted migrations, scheduled cleanup,
+transactional hosted workflow checks, and external health alerts are implemented and checked.
+Successful production CAPTCHA verification and final browser/Auth release checks remain pending;
+public signup is intentionally disabled.
 
 - [Product brief](./docs/product-brief.md)
 - [Workflow contract](./docs/workflow-contract.md)
@@ -104,7 +104,7 @@ just check
 ```
 
 Run `just database-start`, `just browser-install`, and `just infrastructure-init` first. The check runs formatting verification,
-type-aware linting with warnings denied, TypeScript, 38 unit/component checks, public/private database
+type-aware linting with warnings denied, TypeScript, 41 unit/component checks, public/private database
 lint, generated-type drift checks, 159 transactional pgTAP checks, a production build, and 21 real
 Chromium tests at 320, 768, and 1,440 CSS pixels. Browser tests use production preview on port 4174
 and create isolated, expiring local demo data. Infrastructure formatting and validation also run,

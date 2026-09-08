@@ -13,6 +13,8 @@ beforeEach(() => {
 });
 afterEach(() => {
     cleanup();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
     delete window.turnstile;
 });
 
@@ -71,4 +73,59 @@ it("handles provider failures without showing raw diagnostics", async () => {
     render(<Captcha site_key="0x4fictional-site-key" on_token={on_token} />);
     expect(await screen.findByRole("alert")).not.toHaveTextContent("private");
     expect(on_token).toHaveBeenCalledWith(null);
+});
+
+// A real hosted iframe stalled silently; prove the deadline and its exact boundary explicitly.
+it("removes a stalled widget after 60 seconds and rejects its late token", async () => {
+    vi.useFakeTimers();
+    render(<Captcha site_key="0x4fictional-site-key" on_token={on_token} />);
+    await act(async () => {
+        await Promise.resolve();
+    });
+    expect(render_widget).toHaveBeenCalledOnce();
+    act(() => {
+        vi.advanceTimersByTime(59_999);
+    });
+    expect(on_token).not.toHaveBeenCalled();
+    act(() => {
+        vi.advanceTimersByTime(1);
+    });
+    expect(on_token).toHaveBeenCalledWith(null);
+    expect(remove_widget).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: "Reload verification" })).toBeEnabled();
+    act(() => {
+        render_widget.mock.calls[0]?.[1].callback("late-token");
+    });
+    expect(on_token).toHaveBeenCalledOnce();
+});
+
+it("cancels the verification deadline after receiving a valid token", async () => {
+    vi.useFakeTimers();
+    render(<Captcha site_key="0x4fictional-site-key" on_token={on_token} />);
+    await act(async () => {
+        await Promise.resolve();
+    });
+    act(() => {
+        render_widget.mock.calls[0]?.[1].callback("valid-token");
+    });
+    act(() => {
+        vi.advanceTimersByTime(60_000);
+    });
+    expect(on_token).toHaveBeenCalledOnce();
+    expect(on_token).toHaveBeenLastCalledWith("valid-token");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});
+
+it("handles cleanup failures without logging provider diagnostics", async () => {
+    const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
+    remove_widget.mockImplementationOnce(() => {
+        throw new Error("private provider diagnostic");
+    });
+    const view = render(<Captcha site_key="0x4fictional-site-key" on_token={on_token} />);
+    await waitFor(() => {
+        expect(render_widget).toHaveBeenCalledOnce();
+    });
+    view.unmount();
+    expect(warning).toHaveBeenCalledWith("Verification widget cleanup failed; reload the page.");
+    expect(on_token).not.toHaveBeenCalled();
 });

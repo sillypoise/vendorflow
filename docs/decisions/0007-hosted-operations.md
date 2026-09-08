@@ -8,7 +8,8 @@
 ## Admission decisions
 
 - Reuse Cloudflare's explicit Turnstile API without another React dependency. One script is loaded
-  per document with a 15-second deadline. Widget retries and refreshes are manual, callbacks are
+  per document with a 15-second deadline; verification has a separate 60-second deadline.
+  Widget retries and refreshes are manual, callbacks are
   ignored after disposal/failure, tokens are bounded and single-use, and missing configuration
   fails closed. Compact rendering fits the declared 320-pixel layout. Supabase still verifies the
   token server-side; the browser is not the authorization boundary.
@@ -88,14 +89,24 @@ only public Vite configuration, while upload subprocesses receive only their Clo
 The scheduled health probe checks a deep frontend route, framing policy, and the database health
 bit every ten minutes. Failure opens or retains one bot-owned operator issue. Schedule latency is
 not guaranteed; the owner must review workflow activity weekly, re-enable inactive schedules, and
-investigate open alerts rather than treating silence as success. Alert delivery still needs a real
-workflow exercise before release.
+investigate open alerts rather than treating silence as success. The pre-upload failed probes
+[33987484796](https://github.com/sillypoise/vendorflow/actions/runs/33987484796) and
+[33987588464](https://github.com/sillypoise/vendorflow/actions/runs/33987588464) created and retained
+one [operator issue](https://github.com/sillypoise/vendorflow/issues/1). After the frontend upload,
+[33987761099](https://github.com/sillypoise/vendorflow/actions/runs/33987761099) passed. The issue was
+then closed with that evidence. This verifies issue creation and deduplication, not email delivery.
 
 ## Remaining evidence and rollout
 
 Local tests cover token bounds, expiry, disposal, provider error redaction, signup token forwarding,
 missing configuration, scheduler denial, heartbeat expiry, inactive jobs, and rate alert boundaries.
-Monitoring delivery, CAPTCHA delivery/rejection, and HTTPS browser workflow checks still require
-recorded evidence before
-public signup can be enabled. A public frontend with signup closed is only a release candidate, not
-a shipped portfolio demo.
+The closed-signup release candidate is uploaded at https://vendorflow-demo.pages.dev. Its first
+release commit, `4339122`, passed [CI](https://github.com/sillypoise/vendorflow/actions/runs/33987469951).
+A hosted Chromium visit at 320 pixels showed no horizontal overflow, but the production widget did
+not issue a token within 30 seconds. That observation motivated the explicit verification deadline,
+manual reload control, and tests at 59,999/60,000 ms, after success, and after disposal failure.
+
+Successful production CAPTCHA verification remains unverified and requires a normal-browser
+operator check. Do not substitute test keys, forge tokens, or enable signup to bypass this gate.
+Final hosted browser/Auth workflows and portfolio release evidence remain pending. A public
+frontend with signup closed is only a release candidate, not a shipped portfolio demo.
