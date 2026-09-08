@@ -106,7 +106,14 @@ A hosted Chromium visit at 320 pixels showed no horizontal overflow, but the pro
 not issue a token within 30 seconds. That observation motivated the explicit verification deadline,
 manual reload control, and tests at 59,999/60,000 ms, after success, and after disposal failure.
 
-Successful production CAPTCHA verification remains unverified and requires a normal-browser
-operator check. Do not substitute test keys, forge tokens, or enable signup to bypass this gate.
+The operator subsequently confirmed that verification completes in a normal browser and enables
+`Start private demo`. This is operator-reported evidence of browser token delivery, not yet evidence
+of Supabase accepting that token. Hosted health, missing-token rejection (`captcha_failed`), and
+transactional authorization checks were re-run successfully; migration history has no pending
+versions. Signup remains closed pending the server-side acceptance check. With signup closed, the
+operator can submit after verification and report only the Auth response's `error_code`; a
+signup-disabled/provider-disabled response distinguishes that gate from CAPTCHA rejection. Never
+share request bodies, CAPTCHA tokens, or browser-storage exports. Do not substitute test keys,
+forge tokens, or enable signup to bypass this gate.
 Final hosted browser/Auth workflows and portfolio release evidence remain pending. A public
 frontend with signup closed is only a release candidate, not a shipped portfolio demo.
