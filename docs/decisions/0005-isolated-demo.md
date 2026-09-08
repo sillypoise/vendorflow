@@ -67,14 +67,18 @@ more than one membership, longer sessions, or independent reviewer identities.
 
 ## Public-release gates
 
-Owner: `@sillypoise`; all gates must close before public access, not after launch.
+Owner: `@sillypoise`. Security and operational controls must be verified before enabling signup.
+The operator-authorized Stage 6 cutover permits the final real-session workflow/latency checks;
+complete those checks before advertising a shipped release. See
+[the cutover evidence and rollback](./0007-hosted-operations.md#remaining-evidence-and-rollout).
 
 1. Enable and test hosted CAPTCHA (including browser token delivery) and conservative anonymous
    Auth/API rate limits. Local anonymous signup permits 100/hour/IP for repeated E2E runs and has no
    CAPTCHA. That configuration is not a hosted abuse-control approval.
 2. Schedule service-only cleanup, measure worst-case invocation time/WAL, and alert on stale/missing
    cleanup runs, expired backlog, abnormal signup/control rates, and database capacity. Include
-   abandoned Auth identities. No scheduler is currently installed.
+   abandoned Auth identities. Stage 6 installs the database-owned scheduler; measured workload and
+   limitations are recorded in the hosted operations decision.
 3. Verify anonymous Auth, disabled email signup/login, HTTPS, security headers/CSP, key separation,
    database/function grants, redacted logs, quotas, and fail-closed behavior on hosted Supabase.
 4. Provision supported resources with OpenTofu; document state protection, rollback, teardown, and

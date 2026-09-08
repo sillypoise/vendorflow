@@ -100,8 +100,8 @@ resource "supabase_settings" "vendorflow" {
   auth = jsonencode({
     site_url                         = "https://${cloudflare_pages_project.vendorflow.subdomain}"
     uri_allow_list                   = ""
-    disable_signup                   = true
-    external_anonymous_users_enabled = false
+    disable_signup                   = false
+    external_anonymous_users_enabled = true
     external_email_enabled           = false
     external_phone_enabled           = false
     security_captcha_enabled         = true

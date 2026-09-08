@@ -1,6 +1,6 @@
 # 0007: CAPTCHA, Database Maintenance, and HTTPS Migrations
 
-- Status: Implementation in progress; public signup remains closed.
+- Status: Operator-authorized signup cutover; final live workflow verification pending.
 - Owner: `@sillypoise`.
 - Date: 2026-09-05.
 - Contract: [Workflow and health boundaries](../workflow-contract.md).
@@ -107,13 +107,27 @@ not issue a token within 30 seconds. That observation motivated the explicit ver
 manual reload control, and tests at 59,999/60,000 ms, after success, and after disposal failure.
 
 The operator subsequently confirmed that verification completes in a normal browser and enables
-`Start private demo`. This is operator-reported evidence of browser token delivery, not yet evidence
-of Supabase accepting that token. Hosted health, missing-token rejection (`captcha_failed`), and
-transactional authorization checks were re-run successfully; migration history has no pending
-versions. Signup remains closed pending the server-side acceptance check. With signup closed, the
-operator can submit after verification and report only the Auth response's `error_code`; a
-signup-disabled/provider-disabled response distinguishes that gate from CAPTCHA rejection. Never
-share request bodies, CAPTCHA tokens, or browser-storage exports. Do not substitute test keys,
-forge tokens, or enable signup to bypass this gate.
-Final hosted browser/Auth workflows and portfolio release evidence remain pending. A public
-frontend with signup closed is only a release candidate, not a shipped portfolio demo.
+`Start private demo`. The operator then submitted with verification and observed HTTP 422 with
+`code: anonymous_provider_disabled`, rather than the `captcha_failed` response observed without a
+token. Confidence is high that the verified request passed the CAPTCHA check and reached the
+closed anonymous-provider gate; successful session creation still requires live verification.
+
+The operator explicitly authorized the next controlled cutover. The reviewed encrypted OpenTofu
+plan changes only `disable_signup` to false and `external_anonymous_users_enabled` to true on the
+existing settings resource: zero additions, one in-place update, zero deletions. CAPTCHA, its secret,
+email/phone restrictions, rate limits, SSL, and API exposure remain unchanged. Hosted health,
+missing-token rejection, and transactional authorization checks passed immediately before planning.
+
+The apply completed with one settings update and no additions/deletions. Management API reads
+confirmed both signup values and unchanged CAPTCHA, email/phone restrictions, rate limits, and JWT
+lifetime. Post-cutover health and transactional workflow checks passed; unsigned reads/start/cleanup
+still returned 401, and a missing CAPTCHA token still returned `captcha_failed`. A refreshed
+infrastructure plan reported no changes. The encrypted local state was retained; its independent
+operator-owned backup remains the operator's responsibility after this apply.
+
+This cutover permits the final real Auth/browser check; it is not a declaration that all portfolio
+release gates are complete. Owner: `@sillypoise`. Verify private workspace creation, submission,
+assignment, approval, and a second browser's isolation before publishing the portfolio entry.
+If verification fails, restore the two prior Auth values through a fresh reviewed OpenTofu plan.
+Do not reset the database or rotate unrelated credentials as a rollback. Never share request bodies,
+CAPTCHA tokens, or browser-storage exports. Do not substitute test keys or forge tokens.

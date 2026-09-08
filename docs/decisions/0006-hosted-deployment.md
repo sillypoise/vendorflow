@@ -17,6 +17,9 @@ settings. Existing Cloudflare resources were not imported or modified.
 
 ## Bootstrap result and containment
 
+This section records the original closed bootstrap. Subsequent deployment and the operator-approved
+signup cutover are recorded in [0007](./0007-hosted-operations.md).
+
 Pages `vendorflow-demo` and Supabase `sgmmabbsxxgqgtprfbje` were created. Turnstile creation returned
 HTTP 403 even though widget listing succeeded. After the operator granted Turnstile write
 permission, a fresh plan added only the pending widget and settings. Both were created successfully;

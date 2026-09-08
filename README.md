@@ -26,11 +26,11 @@ The test suite covers valid and invalid transitions, cross-user access, and role
 ## Current status
 
 Stage 6 is in progress. The hardened local workflow includes isolated visitor workspaces and real
-browser checks. A closed-signup release candidate is available at
-https://vendorflow-demo.pages.dev. CAPTCHA integration, hosted migrations, scheduled cleanup,
-transactional hosted workflow checks, and external health alerts are implemented and checked.
-Successful production CAPTCHA verification and final browser/Auth release checks remain pending;
-public signup is intentionally disabled.
+browser checks. The release candidate is available at https://vendorflow-demo.pages.dev.
+CAPTCHA integration, hosted migrations, scheduled cleanup, transactional hosted workflow checks,
+and external health alerts are implemented and checked. Following operator-confirmed CAPTCHA
+verification, anonymous signup is enabled for the controlled live workflow check. Email/phone
+sign-in remains disabled. Final browser/Auth workflow and portfolio release evidence remain pending.
 
 - [Product brief](./docs/product-brief.md)
 - [Workflow contract](./docs/workflow-contract.md)
