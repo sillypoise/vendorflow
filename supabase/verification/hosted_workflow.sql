@@ -16,10 +16,11 @@ select set_config('request.jwt.claim.sub',
     (select id::text from hosted_actors where visitor = 1), true);
 set local role authenticated;
 select public.start_demo();
-update hosted_actors set request_id = (select id from public.vendor_requests where state = 'draft')
+update hosted_actors set request_id = (
+    select id from public.vendor_requests where vendor_legal_name = 'Beacon Metrics Inc.')
 where visitor = 1;
 do $check$ begin
-    assert (select count(*) from public.vendor_requests) = 6;
+    assert (select count(*) from public.vendor_requests) = 18;
     assert (select count(*) from public.organizations) = 1;
     assert has_function_privilege('authenticated',
         'public.cleanup_expired_demos()', 'execute') = false;
@@ -33,7 +34,7 @@ set local role authenticated;
 select public.start_demo();
 select public.demo_control('administrator');
 do $check$ begin
-    assert (select count(*) from public.vendor_requests) = 6;
+    assert (select count(*) from public.vendor_requests) = 18;
     assert (select count(*) from public.vendor_requests where id =
         (select request_id from hosted_actors where visitor = 1)) = 0;
     begin
@@ -88,8 +89,8 @@ select set_config('request.jwt.claim.sub',
     (select id::text from hosted_actors where visitor = 2), true);
 set local role authenticated;
 do $check$ begin
-    assert (select count(*) from public.vendor_requests) = 6;
-    assert (select count(*) from public.vendor_request_audit_events) = 18;
+    assert (select count(*) from public.vendor_requests) = 18;
+    assert (select count(*) from public.vendor_request_audit_events) = 54;
 end; $check$;
 reset role;
 select 'passed' as hosted_workflow;

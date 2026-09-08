@@ -10,7 +10,9 @@ or profile instead if you want to preserve your current workspace until it expir
 ## What's in the workspace?
 
 These are fictional purchasing scenarios, not actual companies, purchases, or historical decisions.
-All amounts are annual USD spend. Websites use reserved `.example` domains.
+There are 18 vendors—three per workflow state—covering all five service categories. Requested annual
+spend ranges from $8,400 to $96,000 USD. These amounts are proposed spend, not a booked-spend total.
+Websites use reserved `.example` domains. The full set fits the dashboard's first 20-row page.
 
 | Vendor | Annual spend | Starting state | Scenario |
 | --- | ---: | --- | --- |
@@ -20,6 +22,18 @@ All amounts are annual USD spend. Websites use reserved `.example` domains.
 | Northline Support Systems | $18,000 | Changes requested | Support routing; retention details needed |
 | Juniper Workplace Services | $42,000 | Approved | Office cleaning and consumables |
 | Clearpath Research Studio | $15,000 | Rejected | Research scope already covered by an agreement |
+| Alder Fleet Leasing | $96,000 | Draft | Four field-service vehicles and maintenance |
+| Redwood Meeting Rooms | $9,600 | Draft | Overflow planning and workshop space |
+| Atlas Payroll Services | $54,000 | Submitted | Payroll processing and statutory filings |
+| Orchard Learning Library | $8,400 | Submitted | Self-study courses without employee data uploads |
+| Bluepeak Identity Cloud | $48,000 | In review | Single sign-on and access reviews |
+| Seabrook Packaging Supply | $28,800 | In review | Recyclable packaging and safety stock |
+| Willow Records Storage | $14,400 | Changes requested | Records storage; destruction terms needed |
+| Ridgeway Delivery Network | $66,000 | Changes requested | Delivery service; coverage terms needed |
+| Pinecrest Device Supply | $32,000 | Approved | Replacement laptops and docking stations |
+| Lakeshore Accessibility Studio | $22,500 | Approved | Pre-release portal accessibility review |
+| Summit Conference Passes | $12,500 | Rejected | Attendance plan and travel budget missing |
+| Silverfern Invoice Automation | $19,800 | Rejected | Data residency requirement not met |
 
 The initial timelines are generated through real workflow transitions when the workspace is created
 or reset. They are sample history performed by simulated personas at that time—not backdated work by

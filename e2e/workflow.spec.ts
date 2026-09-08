@@ -34,6 +34,27 @@ async function check_accessibility(page: Page) {
     );
 }
 
+// The expanded catalog stays on one page; filtering and reset must preserve the complete set.
+test("eighteen sample vendors populate the dashboard and survive an explicit reset", async ({
+    page,
+}) => {
+    await enter_demo(page);
+    await expect(page.locator(".request-grid > li")).toHaveCount(18);
+    await expect(page.getByRole("button", { name: "Next page" })).toBeDisabled();
+    await page
+        .getByRole("combobox", { name: "Status", exact: true })
+        .selectOption("changes_requested");
+    await expect(page.locator(".request-grid > li")).toHaveCount(3);
+    await page.getByRole("link", { name: /Northline Support Systems/u }).click();
+    await expect(page.locator(".timeline")).toContainText("Attach the data retention policy");
+    page.once("dialog", (dialog) => {
+        void dialog.accept();
+    });
+    await page.getByRole("button", { name: "Reset my demo" }).click();
+    await expect(page.locator(".request-grid > li")).toHaveCount(18);
+    await expect(page.getByLabel("Demo role")).toHaveValue("requester");
+});
+
 // Real browser sessions exercise GoTrue, PostgREST, RLS and the UI at both declared viewport bounds.
 test("request changes, correct, resubmit, and approve with an immutable timeline", async ({
     page,

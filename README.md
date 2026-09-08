@@ -26,7 +26,7 @@ hiding buttons in the browser.
 ## Explore the demo
 
 Open the demo, complete verification, and select **Start private demo**. No email or password is
-required. Each visitor gets an isolated workspace with six fictional vendor scenarios, from draft
+required. Each visitor gets an isolated workspace with 18 fictional vendor scenarios, from draft
 to approved and rejected. Use **Demo role** to explore each part of the process.
 
 Already have a workspace? **Reset my demo** loads the current sample dataset, but deletes your
