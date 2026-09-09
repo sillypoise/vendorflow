@@ -10,7 +10,7 @@ function PublicHeader() {
                 </span>
                 <span>VendorFlow</span>
             </Link>
-            <span className="project-label">Independent product concept · Fictional data</span>
+            <span className="project-label">Independent product concept · Sample data</span>
         </header>
     );
 }
@@ -48,8 +48,8 @@ function WorkflowProof() {
     return (
         <section className="proof-grid" aria-labelledby="proof-heading">
             <div>
-                <p className="section-kicker">What this project proves</p>
-                <h2 id="proof-heading">A real operational workflow, not a dashboard mockup.</h2>
+                <p className="section-kicker">How it works</p>
+                <h2 id="proof-heading">From vendor request to recorded decision.</h2>
             </div>
             <ol className="flow-list">
                 <li>
@@ -83,13 +83,13 @@ export function HomePage() {
                     </p>
                     <div className="hero-actions">
                         <Link className="primary-button" to="/requests">
-                            Open workflow demo
+                            Open workflow preview
                         </Link>
-                        <div className="stage-card" aria-label="Current project stage">
+                        <div className="stage-card" aria-label="Product preview">
                             <span className="status-dot" aria-hidden="true" />
                             <div>
-                                <strong>Database-backed workflow available</strong>
-                                <span>Start a private fictional workspace and try each role.</span>
+                                <strong>Explore the full workflow</strong>
+                                <span>Explore sample requests in your own private workspace.</span>
                             </div>
                         </div>
                     </div>

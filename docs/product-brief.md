@@ -66,7 +66,7 @@ Each state transition and corresponding audit event must commit in one database 
 
 ## First-release screens
 
-1. A public introduction that accurately labels the project and demo data.
+1. A public introduction that accurately labels the project and sample data.
 2. A role-aware request dashboard with useful status and assignment filters.
 3. A vendor request form with field-level validation and draft behavior.
 4. A review workspace containing request details, notes, and permitted actions.
@@ -132,9 +132,9 @@ The first release will not include:
 
 ## Decisions and re-check triggers
 
-### Public demo identity isolation
+### Public preview identity isolation
 
-A shared mutable demo account is not acceptable because visitors could affect one another. Stage 5
+A shared mutable preview account is not acceptable because visitors could affect one another. Stage 5
 implemented anonymous Supabase identities with one private organization per visitor, server-enforced
 expiry, and caller-scoped role/reset controls. This simulates three personas, not independent human
 approvers. The [decision](./decisions/0005-isolated-demo.md) records the authorization boundary.

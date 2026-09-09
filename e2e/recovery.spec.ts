@@ -24,11 +24,11 @@ test("failed session creation and failed list reads recover without leaking erro
 }) => {
     await page.goto("/requests");
     await page.route("**/auth/v1/signup", (route) => route.abort());
-    await page.getByRole("button", { name: "Start private demo" }).click();
+    await page.getByRole("button", { name: "Start private preview" }).click();
     await expect(page.getByRole("alert")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Start private demo" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Start private preview" })).toBeEnabled();
     await page.unroute("**/auth/v1/signup");
-    await page.getByRole("button", { name: "Start private demo" }).click();
+    await page.getByRole("button", { name: "Start private preview" }).click();
     await expect(page.getByRole("heading", { name: "Vendor requests", exact: true })).toBeVisible();
     await page.route("**/rest/v1/vendor_requests?*", () => {
         // Hold this read until navigation cancels it so the pending-state check is deterministic.
@@ -54,7 +54,7 @@ test("failed session creation and failed list reads recover without leaking erro
 
 test("unsaved navigation, denied edit route, and session cache separation", async ({ page }) => {
     await page.goto("/requests");
-    await page.getByRole("button", { name: "Start private demo" }).click();
+    await page.getByRole("button", { name: "Start private preview" }).click();
     await page.getByRole("link", { name: /Beacon Metrics/u }).click();
     const old_url = page.url();
     await page.getByRole("link", { name: "Edit request" }).click();
@@ -69,14 +69,14 @@ test("unsaved navigation, denied edit route, and session cache separation", asyn
     });
     await page.getByRole("link", { name: "Cancel", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Beacon Metrics Inc." })).toBeVisible();
-    await page.getByLabel("Demo role").selectOption("reviewer");
+    await page.getByLabel("Preview role").selectOption("reviewer");
     await expect(page.getByRole("heading", { name: "Vendor requests", exact: true })).toBeVisible();
     await page.goto(`${old_url}/edit`);
     await expect(page.getByRole("heading", { name: "Requester access required" })).toBeVisible();
     await page.getByRole("button", { name: "End session" }).click();
     await expect(page).toHaveURL("/");
     await page.goto(old_url);
-    await page.getByRole("button", { name: "Start private demo" }).click();
+    await page.getByRole("button", { name: "Start private preview" }).click();
     await expect(page.getByRole("heading", { name: "Request unavailable" })).toBeVisible();
     await expect(page.getByText("Unsaved private name")).toHaveCount(0);
 });
@@ -95,7 +95,7 @@ test("landing and entry page support keyboard navigation and accessible names", 
         (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
             .violations,
     ).toEqual([]);
-    await page.getByRole("link", { name: "Open workflow demo" }).click();
+    await page.getByRole("link", { name: "Open workflow preview" }).click();
     expect(
         (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
             .violations,

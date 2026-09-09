@@ -238,6 +238,17 @@ and first-page payload increase; no latency improvement is claimed. The fixed pr
 keeps scenario data separate from the existing transition orchestration, without introducing a
 configurable seeding engine, shared login, or persistent cross-visitor fixture.
 
+### Preview terminology
+
+The public interface uses **preview**, **sample data**, **Preview role**, and **Reset workspace**.
+It continues to identify an independent product concept and simulated responsibilities. Technical
+RPC names, error codes, and the hosted URL retain their existing `demo` identifiers for compatibility.
+This is presentation-only: permissions, expiry, workflow transitions, and reset behavior are unchanged.
+The label migration changes only exact legacy generated organization/member names belonging to private
+sessions. Customized labels, ordinary organizations, requests, and audit history are preserved.
+New sessions receive `Private preview workspace` and `Preview visitor` labels. There are no additional
+browser API calls. Apply the label migration before deploying the new UI; old clients remain compatible.
+
 ## Operational health boundary
 
 Owner: `@sillypoise`; version: `v1-draft`. `demo_health()` accepts no arguments and returns one boolean

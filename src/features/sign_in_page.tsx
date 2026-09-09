@@ -55,12 +55,12 @@ function SignInIntroduction() {
             <p className="section-kicker">Independent product concept</p>
             <h1 id="sign-in-heading">Your own workflow.</h1>
             <p>
-                Start a private, 24-hour workspace with fictional vendor data. No email or password
+                Start a private, 24-hour workspace with sample vendor data. No email or password
                 needed. Other visitors cannot see or change your requests.
             </p>
             <p>
                 Try requester, administrator, and reviewer roles in your own workspace. Role
-                switching is a demo simulation; workflow decisions are real database writes.
+                switching simulates each responsibility; decisions are saved with an audit history.
             </p>
         </>
     );
@@ -103,7 +103,7 @@ export function SignInPage() {
                         void start_session();
                     }}
                 >
-                    {submitting ? "Creating private session…" : "Start private demo"}
+                    {submitting ? "Creating private session…" : "Start private preview"}
                 </button>
                 <p>
                     <a href="/">Back to introduction</a>

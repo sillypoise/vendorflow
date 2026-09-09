@@ -2,7 +2,7 @@
 
 **Vendor intake and approval, without the spreadsheet-and-email handoffs.**
 
-[Try the demo](https://vendorflow-demo.pages.dev) · [Demo walkthrough](docs/demo.md)
+[Open the preview](https://vendorflow-demo.pages.dev) · [Preview walkthrough](docs/preview.md)
 
 ## The problem
 
@@ -23,20 +23,20 @@ Incomplete drafts can be saved. Stale edits cannot silently overwrite newer chan
 revision checks, state changes, and audit entries are enforced together in PostgreSQL—not just by
 hiding buttons in the browser.
 
-## Explore the demo
+## Explore the preview
 
-Open the demo, complete verification, and select **Start private demo**. No email or password is
-required. Each visitor gets an isolated workspace with 18 fictional vendor scenarios, from draft
-to approved and rejected. Use **Demo role** to explore each part of the process.
+Open the preview, complete verification, and select **Start private preview**. No email or password
+is required. Each visitor gets an isolated workspace with 18 sample vendor scenarios, from draft
+to approved and rejected. Use **Preview role** to explore each part of the process.
 
-Already have a workspace? **Reset my demo** loads the current sample dataset, but deletes your
+Already have a workspace? **Reset workspace** loads the current sample dataset, but deletes your
 workspace's existing requests and history. It does not affect other visitors or extend expiry.
 
 The same browser session reuses its workspace; a separate browser/profile gets another one.
-Workspaces expire after 24 hours. This is an independent product concept with fictional data and
+Workspaces expire after 24 hours. This is an independent product concept with sample data and
 simulated personas—not client work or evidence of independent-human separation of duties.
 
-See the [sample data and walkthrough](docs/demo.md) for a repeatable demonstration.
+See the [sample data and walkthrough](docs/preview.md) for a guided tour.
 
 ## Under the hood
 
@@ -46,7 +46,7 @@ See the [sample data and walkthrough](docs/demo.md) for a repeatable demonstrati
 - **Vitest, pgTAP, and Playwright/axe** for application, database, and browser checks.
 
 Visitor data is isolated by authenticated identity. Cleanup runs in the database; operational health
-is monitored without exposing privileged credentials. Role switching is a bounded demo capability,
+is monitored without exposing privileged credentials. Role switching is a bounded preview capability,
 not a general permission-management feature.
 
 ## Run locally

@@ -59,11 +59,11 @@ export function workflow_error_message(error: unknown): string {
     const code = error instanceof WorkflowError ? error.code : "INTERNAL_ERROR";
     switch (code) {
         case "AUTHENTICATION_REQUIRED":
-            return "Your session has expired. End this session and start a new demo.";
+            return "Your session has expired. End this session and start a new preview.";
         case "DEMO_EXPIRED":
-            return "This 24-hour workspace has expired. End this session and start a new demo.";
+            return "This 24-hour workspace has expired. End this session and start a new preview.";
         case "DEMO_LIMIT_REACHED":
-            return "This demo reached its safety limit. End this session and start a new demo.";
+            return "This workspace reached its safety limit. End this session and start a new preview.";
         case "PERMISSION_DENIED":
             return "Your role does not permit this action.";
         case "REQUEST_NOT_FOUND":

@@ -18,8 +18,9 @@ describe("VendorFlow application pages", () => {
                 name: "Every vendor decision has an owner and a history.",
             }),
         ).toBeVisible();
-        expect(screen.getByText("Database-backed workflow available")).toBeVisible();
-        expect(screen.getByRole("link", { name: "Open workflow demo" })).toHaveAttribute(
+        expect(screen.getByText("Explore the full workflow")).toBeVisible();
+        expect(screen.getByText("Independent product concept · Sample data")).toBeVisible();
+        expect(screen.getByRole("link", { name: "Open workflow preview" })).toHaveAttribute(
             "href",
             "/requests",
         );

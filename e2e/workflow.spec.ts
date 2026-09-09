@@ -3,14 +3,14 @@ import { AxeBuilder } from "@axe-core/playwright";
 
 async function enter_demo(page: Page) {
     await page.goto("/requests");
-    await page.getByRole("button", { name: "Start private demo" }).click();
+    await page.getByRole("button", { name: "Start private preview" }).click();
     await expect(page.getByRole("heading", { name: "Vendor requests", exact: true })).toBeVisible();
 }
 
 async function switch_role(page: Page, role: string) {
-    await page.getByLabel("Demo role").selectOption(role);
+    await page.getByLabel("Preview role").selectOption(role);
     await expect(page.getByRole("heading", { name: "Vendor requests", exact: true })).toBeVisible();
-    await expect(page.getByLabel("Demo role")).toHaveValue(role);
+    await expect(page.getByLabel("Preview role")).toHaveValue(role);
     await page.getByRole("link", { name: /Beacon Metrics/u }).click();
 }
 
@@ -50,9 +50,9 @@ test("eighteen sample vendors populate the dashboard and survive an explicit res
     page.once("dialog", (dialog) => {
         void dialog.accept();
     });
-    await page.getByRole("button", { name: "Reset my demo" }).click();
+    await page.getByRole("button", { name: "Reset workspace" }).click();
     await expect(page.locator(".request-grid > li")).toHaveCount(18);
-    await expect(page.getByLabel("Demo role")).toHaveValue("requester");
+    await expect(page.getByLabel("Preview role")).toHaveValue("requester");
 });
 
 // Real browser sessions exercise GoTrue, PostgREST, RLS and the UI at both declared viewport bounds.
@@ -67,7 +67,7 @@ test("request changes, correct, resubmit, and approve with an immutable timeline
     await switch_role(page, "administrator");
     await page
         .getByRole("combobox", { name: "Reviewer", exact: true })
-        .selectOption({ label: "Demo visitor" });
+        .selectOption({ label: "Preview visitor" });
     await page.getByRole("button", { name: "Assign reviewer", exact: true }).click();
     await expect(page.locator(".status-badge")).toHaveText("In review");
     await switch_role(page, "reviewer");
@@ -91,7 +91,7 @@ test("request changes, correct, resubmit, and approve with an immutable timeline
     await switch_role(page, "administrator");
     await page
         .getByRole("combobox", { name: "Reviewer", exact: true })
-        .selectOption({ label: "Demo visitor" });
+        .selectOption({ label: "Preview visitor" });
     await page.getByRole("button", { name: "Assign reviewer", exact: true }).click();
     await expect(page.locator(".status-badge")).toHaveText("In review");
     await switch_role(page, "reviewer");
@@ -112,7 +112,7 @@ test("two visitors stay isolated through role switches and reset", async ({ page
         await enter_demo(other);
         await other.goto(private_url);
         await expect(other.getByRole("heading", { name: "Request unavailable" })).toBeVisible();
-        await other.getByLabel("Demo role").selectOption("administrator");
+        await other.getByLabel("Preview role").selectOption("administrator");
         await expect(
             other.getByRole("heading", { name: "Vendor requests", exact: true }),
         ).toBeVisible();
@@ -121,7 +121,7 @@ test("two visitors stay isolated through role switches and reset", async ({ page
         other.once("dialog", (dialog) => {
             void dialog.accept();
         });
-        await other.getByRole("button", { name: "Reset my demo" }).click();
+        await other.getByRole("button", { name: "Reset workspace" }).click();
         await expect(
             other.getByRole("heading", { name: "Vendor requests", exact: true }),
         ).toBeVisible();

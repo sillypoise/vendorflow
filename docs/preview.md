@@ -1,15 +1,15 @@
-# Try VendorFlow
+# VendorFlow preview
 
 Open **https://vendorflow-demo.pages.dev/requests**, complete verification, and choose
-**Start private demo**. There is no shared login or password.
+**Start private preview**. There is no shared login or password.
 
-New workspaces contain the sample set below. If you already have a workspace, choose **Reset my demo**
+New workspaces contain the sample set below. If you already have a workspace, choose **Reset workspace**
 and confirm to load it. **Reset deletes your current requests and history.** Use a separate browser
 or profile instead if you want to preserve your current workspace until it expires.
 
 ## What's in the workspace?
 
-These are fictional purchasing scenarios, not actual companies, purchases, or historical decisions.
+These are sample purchasing scenarios, not actual companies, purchases, or historical decisions.
 There are 18 vendors—three per workflow state—covering all five service categories. Requested annual
 spend ranges from $8,400 to $96,000 USD. These amounts are proposed spend, not a booked-spend total.
 Websites use reserved `.example` domains. The full set fits the dashboard's first 20-row page.
@@ -42,7 +42,7 @@ real employees. You remain the owner of every sample request.
 ## A short walkthrough
 
 1. Open **Beacon Metrics Inc.** as **Requester** and submit the draft.
-2. Switch **Demo role** to **Administrator**, reopen Beacon Metrics, and assign **Demo visitor**.
+2. Switch **Preview role** to **Administrator**, reopen Beacon Metrics, and assign **Preview visitor**.
 3. Switch to **Reviewer**, reopen the request, and approve it—or request changes with a reason.
 4. For the correction path, switch back to **Requester**, edit, and resubmit. Assign and review again.
 5. Inspect the timeline to see the decisions and their revisions.

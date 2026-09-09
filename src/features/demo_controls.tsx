@@ -26,11 +26,11 @@ function useDemoControl() {
 export function DemoControls({ role }: { role: MembershipRole }) {
     const { control, pending, error } = useDemoControl();
     return (
-        <section className="demo-toolbar" aria-label="Private demo controls">
-            <p>Fictional data · Your private workspace · Expires after 24 hours</p>
+        <section className="demo-toolbar" aria-label="Private preview controls">
+            <p>Sample data · Your private workspace · Expires after 24 hours</p>
             <div className="button-row">
                 <label>
-                    Demo role
+                    Preview role
                     <select
                         disabled={pending}
                         value={role}
@@ -57,14 +57,14 @@ export function DemoControls({ role }: { role: MembershipRole }) {
                     onClick={() => {
                         if (
                             globalThis.confirm(
-                                "Delete your demo requests and history and start fresh?",
+                                "Delete your workspace requests and history and restore the sample data?",
                             )
                         ) {
                             void control("reset");
                         }
                     }}
                 >
-                    Reset my demo
+                    Reset workspace
                 </button>
             </div>
             <MutationError error={error} />

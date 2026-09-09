@@ -21,7 +21,8 @@ it("requires verification, forwards its token, and consumes it on failed signup"
     window.turnstile = { render: render_widget, remove: vi.fn<TurnstileAPI["remove"]>() };
     sign_in.mockResolvedValue({ error: new Error("private server diagnostic") });
     render(<SignInPage />);
-    const start = screen.getByRole("button", { name: "Start private demo" });
+    expect(screen.getByText(/switching simulates each responsibility/u)).toBeVisible();
+    const start = screen.getByRole("button", { name: "Start private preview" });
     expect(start).toBeDisabled();
     await waitFor(() => {
         expect(render_widget).toHaveBeenCalledOnce();
@@ -49,6 +50,6 @@ it("fails closed when hosted CAPTCHA configuration is missing", () => {
     vi.stubEnv("VITE_TURNSTILE_SITE_KEY", "");
     render(<SignInPage />);
     expect(screen.getByRole("alert")).toHaveTextContent("not configured");
-    fireEvent.click(screen.getByRole("button", { name: "Start private demo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start private preview" }));
     expect(sign_in).not.toHaveBeenCalled();
 });
