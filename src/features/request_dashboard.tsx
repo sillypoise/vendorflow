@@ -44,24 +44,34 @@ function RequestCard({ request }: { request: VendorRequest }) {
                 to="/requests/$requestId"
             >
                 <div className="request-card-heading">
+                    <span className="vendor-mark" aria-hidden="true">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                        >
+                            <path d="M5 21V4h10v17M15 10h4v11M3 21h18M9 8h2M9 12h2M9 16h2" />
+                        </svg>
+                    </span>
                     <div>
-                        <span className={`status-badge status-${request.state}`}>
-                            {request_state_label(request.state)}
-                        </span>
-                        <h2>{request.vendor_legal_name ?? "Untitled vendor"}</h2>
+                        <h3>{request.vendor_legal_name ?? "Untitled vendor"}</h3>
+                        <p>{request.service_category?.replaceAll("_", " ") ?? "Not provided"}</p>
                     </div>
+                </div>
+                <div className="request-card-status">
+                    <span className={`status-badge status-${request.state}`}>
+                        {request_state_label(request.state)}
+                    </span>
                     <span aria-label={`Revision ${request.revision}`} className="revision-label">
                         r{request.revision}
+                        <span aria-hidden="true"> →</span>
                     </span>
                 </div>
                 <dl className="request-card-facts">
                     <div>
-                        <dt>Category</dt>
-                        <dd>{request.service_category?.replaceAll("_", " ") ?? "Not provided"}</dd>
-                    </div>
-                    <div>
                         <dt>Annual spend</dt>
-                        <dd>
+                        <dd className="spend-value">
                             {format_spend(request.annual_spend_minor_units, request.currency_code)}
                         </dd>
                     </div>
@@ -135,6 +145,29 @@ function RequestPages({
     );
 }
 
+function RequestRows({ requests }: { requests: VendorRequest[] }) {
+    return (
+        <>
+            {requests.length > 0 ? (
+                <div className="ledger-columns" aria-hidden="true">
+                    <span>Vendor / category</span>
+                    <span>Status</span>
+                    <div className="ledger-facts-heading">
+                        <span>Annual spend</span>
+                        <span>Updated</span>
+                    </div>
+                    <span>Rev.</span>
+                </div>
+            ) : null}
+            <ul className="request-grid">
+                {requests.map((request) => (
+                    <RequestCard key={request.id} request={request} />
+                ))}
+            </ul>
+        </>
+    );
+}
+
 function RequestList({ state_filter }: { state_filter: RequestState | "all" }) {
     const [page, set_page] = useState(0);
     const requests_query = useQuery({
@@ -165,12 +198,15 @@ function RequestList({ state_filter }: { state_filter: RequestState | "all" }) {
                     <p>Choose another status or page.</p>
                 </div>
             ) : null}
-            <ul className="request-grid">
-                {requests_query.data.map((request) => (
-                    <RequestCard key={request.id} request={request} />
-                ))}
-            </ul>
-            <RequestPages page={page} count={requests_query.data.length} set_page={set_page} />
+            <RequestRows requests={requests_query.data} />
+            <div className="ledger-footer">
+                <p className="results-summary" aria-live="polite">
+                    {requests_query.data.length}{" "}
+                    {requests_query.data.length === 1 ? "request" : "requests"}
+                    {" on this page"}
+                </p>
+                <RequestPages page={page} count={requests_query.data.length} set_page={set_page} />
+            </div>
         </>
     );
 }
@@ -192,7 +228,7 @@ export function RequestDashboardPage() {
                     </Link>
                 ) : null}
             </header>
-            <section aria-labelledby="request-list-heading">
+            <section className="request-ledger" aria-labelledby="request-list-heading">
                 <div className="list-toolbar">
                     <h2 id="request-list-heading">Current work</h2>
                     <StateFilter state={state_filter} set_state={set_state_filter} />

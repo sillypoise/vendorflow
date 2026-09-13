@@ -52,6 +52,16 @@ function useStartSession() {
 function SignInIntroduction() {
     return (
         <>
+            <div className="brand">
+                <img
+                    className="brand-mark"
+                    src="/vendorflow-mark.svg"
+                    alt=""
+                    width="40"
+                    height="40"
+                />
+                <span>VendorFlow</span>
+            </div>
             <p className="section-kicker">Independent product concept</p>
             <h1 id="sign-in-heading">Your own workflow.</h1>
             <p>

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { AxeBuilder } from "@axe-core/playwright";
+import { check_accessibility } from "./accessibility";
 
 async function enter_demo(page: Page) {
     await page.goto("/requests");
@@ -14,25 +14,55 @@ async function switch_role(page: Page, role: string) {
     await page.getByRole("link", { name: /Beacon Metrics/u }).click();
 }
 
-async function check_accessibility(page: Page) {
-    const result = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-        .analyze();
-    expect(result.violations).toEqual([]);
-    const controls = page.locator("input, select, textarea, button");
-    expect(await controls.count()).toBeLessThanOrEqual(100);
-    expect(
-        await controls.evaluateAll((elements) =>
-            elements.every((element) => {
-                const bounds = element.getBoundingClientRect();
-                return bounds.width === 0 || (bounds.left >= -1 && bounds.right <= innerWidth + 1);
-            }),
-        ),
-    ).toBe(true);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-        true,
+// All six states retain readable labels; navigation and row activation also work without a mouse.
+test("request list preserves status labels and keyboard navigation", async ({ page }) => {
+    await enter_demo(page);
+    await expect(page.locator(".results-summary")).toHaveText("18 requests on this page");
+    await expect(
+        page.getByRole("navigation").getByRole("link", { name: "Requests" }),
+    ).toBeVisible();
+    await page.locator(".request-card").first().hover();
+    await check_accessibility(page);
+    const statuses = [
+        "Draft",
+        "Submitted",
+        "In review",
+        "Changes requested",
+        "Approved",
+        "Rejected",
+    ];
+    await expect(page.locator(".status-badge")).toHaveCount(18);
+    expect((await page.locator(".status-badge").allTextContents()).toSorted()).toEqual(
+        statuses.flatMap((label) => [label, label, label]).toSorted(),
     );
-}
+    await page.getByRole("combobox", { name: "Status", exact: true }).selectOption("rejected");
+    await expect(page.locator(".status-badge")).toHaveText(["Rejected", "Rejected", "Rejected"]);
+    await expect(page.locator(".results-summary")).toHaveText("3 requests on this page");
+    await page.getByRole("combobox", { name: "Status", exact: true }).focus();
+    await page.keyboard.press("Tab");
+    await expect(page.locator(".request-card").first()).toBeFocused();
+    await expect(page.locator(".request-card").first()).toHaveCSS("outline-style", "solid");
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("heading", { name: "Request information" })).toBeVisible();
+});
+
+// The database's 160-character name bound is tested without word breaks, then at 200% text size.
+test("maximum-length names reflow in details and the list with enlarged text", async ({ page }) => {
+    await enter_demo(page);
+    await page.getByRole("link", { name: "New request" }).click();
+    const vendor_name = "W".repeat(160);
+    await page.getByLabel("Vendor legal name").fill(vendor_name);
+    await page.getByRole("button", { name: "Save draft" }).click();
+    await expect(page.getByRole("heading", { name: vendor_name, exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Submit request", exact: true })).toBeDisabled();
+    await check_accessibility(page);
+    await page.getByRole("link", { name: "All requests" }).click();
+    await expect(page.getByRole("heading", { name: vendor_name, exact: true })).toBeVisible();
+    await page.addStyleTag({ content: ":root { font-size: 200%; }" });
+    await check_accessibility(page);
+    await page.getByRole("link", { name: vendor_name }).click();
+    await check_accessibility(page);
+});
 
 // The expanded catalog stays on one page; filtering and reset must preserve the complete set.
 test("eighteen sample vendors populate the dashboard and survive an explicit reset", async ({
@@ -140,17 +170,21 @@ test("draft validation, empty state, service failure and retry", async ({ page }
     );
     await page.getByRole("combobox", { name: "Status", exact: true }).selectOption("rejected");
     await expect(page.getByRole("heading", { name: "No requests match this view." })).toBeVisible();
+    await expect(page.locator(".results-summary")).toHaveText("0 requests on this page");
+    await check_accessibility(page);
     await page.unroute("**/rest/v1/vendor_requests?*");
     await page.getByRole("link", { name: "New request" }).click();
     await page.getByLabel("Business justification").fill("too short");
     await page.getByLabel("Vendor legal name").click();
     await expect(page.getByText("Use at least 20 characters.")).toBeVisible();
+    await check_accessibility(page);
     await page.getByLabel("Business justification").fill("");
     await page.getByLabel("Vendor legal name").fill("Draft recovery test");
     await check_accessibility(page);
     await page.route("**/rest/v1/rpc/create_vendor_request", (route) => route.abort());
     await page.getByRole("button", { name: "Save draft" }).click();
     await expect(page.getByRole("alert")).toContainText("Your unsaved values have been kept");
+    await check_accessibility(page);
     await expect(page.getByLabel("Vendor legal name")).toHaveValue("Draft recovery test");
     await page.unroute("**/rest/v1/rpc/create_vendor_request");
     await page.getByRole("button", { name: "Save draft" }).click();

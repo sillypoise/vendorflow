@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { AxeBuilder } from "@axe-core/playwright";
+import { check_accessibility } from "./accessibility";
 
 function measure_loading() {
     const navigation = performance.getEntriesByType("navigation")[0];
@@ -35,6 +35,7 @@ test("failed session creation and failed list reads recover without leaking erro
     });
     await page.getByRole("combobox", { name: "Status", exact: true }).selectOption("submitted");
     await expect(page.getByText("Loading requests…", { exact: true })).toBeVisible();
+    await check_accessibility(page);
     await page.unroute("**/rest/v1/vendor_requests?*");
     await page.route("**/rest/v1/vendor_requests?*", (route) =>
         route.fulfill({
@@ -46,6 +47,7 @@ test("failed session creation and failed list reads recover without leaking erro
     await page.reload();
     await expect(page.getByRole("alert")).toContainText("temporarily unavailable");
     await expect(page.getByRole("alert")).not.toContainText("password");
+    await check_accessibility(page);
     await page.unroute("**/rest/v1/vendor_requests?*");
     await page.getByRole("button", { name: "Retry", exact: true }).click();
     await page.getByRole("combobox", { name: "Status", exact: true }).selectOption("submitted");
@@ -73,12 +75,31 @@ test("unsaved navigation, denied edit route, and session cache separation", asyn
     await expect(page.getByRole("heading", { name: "Vendor requests", exact: true })).toBeVisible();
     await page.goto(`${old_url}/edit`);
     await expect(page.getByRole("heading", { name: "Requester access required" })).toBeVisible();
+    await check_accessibility(page);
     await page.getByRole("button", { name: "End session" }).click();
     await expect(page).toHaveURL("/");
     await page.goto(old_url);
     await page.getByRole("button", { name: "Start private preview" }).click();
     await expect(page.getByRole("heading", { name: "Request unavailable" })).toBeVisible();
     await expect(page.getByText("Unsaved private name")).toHaveCount(0);
+});
+
+// One SVG serves the brand and favicon; a failed image must not hide the name or block entry.
+test("brand artwork loads and image failure preserves navigation", async ({ page }) => {
+    await page.goto("/");
+    const mark = page.locator("img.brand-mark");
+    await expect(mark).toHaveAttribute("alt", "");
+    await expect
+        .poll(() => mark.evaluate((image: HTMLImageElement) => image.naturalWidth))
+        .toBeGreaterThan(0);
+    await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", "/vendorflow-mark.svg");
+    await page.route("**/vendorflow-mark.svg", (route) => route.abort());
+    await page.reload();
+    await expect(page.getByRole("link", { name: "VendorFlow home" })).toBeVisible();
+    await expect.poll(() => mark.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(0);
+    await page.getByRole("link", { name: "Open workflow preview" }).click();
+    await expect(page.getByRole("heading", { name: "Your own workflow." })).toBeVisible();
+    await expect(page.locator(".brand")).toHaveText("VendorFlow");
 });
 
 test("landing and entry page support keyboard navigation and accessible names", async ({
@@ -91,13 +112,13 @@ test("landing and entry page support keyboard navigation and accessible names", 
     await expect(page.getByRole("link", { name: "Skip to main content" })).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.locator("main")).toBeFocused();
-    expect(
-        (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
-            .violations,
-    ).toEqual([]);
+    await check_accessibility(page);
+    // Enlarged text must reflow the illustration without pushing the entry action off-screen.
+    const enlarged_text = await page.addStyleTag({ content: ":root { font-size: 200%; }" });
+    await check_accessibility(page);
+    await enlarged_text.evaluate((element) => {
+        element.textContent = "";
+    });
     await page.getByRole("link", { name: "Open workflow preview" }).click();
-    expect(
-        (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze())
-            .violations,
-    ).toEqual([]);
+    await check_accessibility(page);
 });

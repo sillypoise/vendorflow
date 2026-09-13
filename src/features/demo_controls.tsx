@@ -27,7 +27,7 @@ export function DemoControls({ role }: { role: MembershipRole }) {
     const { control, pending, error } = useDemoControl();
     return (
         <section className="demo-toolbar" aria-label="Private preview controls">
-            <p>Sample data · Your private workspace · Expires after 24 hours</p>
+            <p>Sample data · Private workspace · 24-hour access</p>
             <div className="button-row">
                 <label>
                     Preview role

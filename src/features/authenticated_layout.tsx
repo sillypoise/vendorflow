@@ -65,13 +65,19 @@ function WorkspaceHeader({ context }: { context: ApplicationContext }) {
     return (
         <header className="workspace-header">
             <Link className="brand" to="/" aria-label="VendorFlow home">
-                <span className="brand-mark" aria-hidden="true">
-                    VF
-                </span>
+                <img
+                    className="brand-mark"
+                    src="/vendorflow-mark.svg"
+                    alt=""
+                    width="40"
+                    height="40"
+                />
                 <span>VendorFlow</span>
             </Link>
             <nav aria-label="Workspace navigation">
-                <Link to="/requests">Requests</Link>
+                <Link to="/requests" activeProps={{ "aria-current": "page" }}>
+                    Requests
+                </Link>
             </nav>
             <div className="identity-block">
                 <span>{context.membership.display_name}</span>
